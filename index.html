@@ -3,674 +3,904 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🇪🇪 Estonian Used Car Market</title>
+<title>🇪🇪 Järelturg — Estonian Used Car Market</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap');
-
-  :root {
-    --bg: #0a0c10;
-    --surface: #111418;
-    --surface2: #181c22;
-    --border: #22282f;
-    --accent: #e8c547;
-    --accent2: #4f9cf9;
-    --accent3: #63d4a0;
-    --text: #e8eaed;
-    --muted: #6b7280;
-    --danger: #f87171;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Syne', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* ─── HEADER ─── */
-  header {
-    border-bottom: 1px solid var(--border);
-    padding: 20px 40px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    background: rgba(10,12,16,0.92);
-    backdrop-filter: blur(12px);
-    z-index: 100;
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .logo-flag {
-    font-size: 24px;
-  }
-
-  .logo-text {
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text);
-  }
-
-  .logo-sub {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.12em;
-    margin-top: 2px;
-  }
-
-  .header-status {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .status-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--muted);
-    transition: background 0.3s;
-  }
-  .status-dot.active { background: var(--accent3); box-shadow: 0 0 8px var(--accent3); }
-
-  /* ─── MAIN ─── */
-  main {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 40px;
-  }
-
-  /* ─── UPLOAD ZONE ─── */
-  .upload-section {
-    margin-bottom: 48px;
-  }
-
-  .section-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    color: var(--accent);
-    text-transform: uppercase;
-    margin-bottom: 16px;
-  }
-
-  .upload-area {
-    border: 1.5px dashed var(--border);
-    border-radius: 12px;
-    padding: 40px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    background: var(--surface);
-    position: relative;
-  }
-
-  .upload-area:hover, .upload-area.drag-over {
-    border-color: var(--accent);
-    background: rgba(232,197,71,0.04);
-  }
-
-  .upload-icon {
-    font-size: 36px;
-    margin-bottom: 12px;
-  }
-
-  .upload-title {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 8px;
-  }
-
-  .upload-hint {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.6;
-  }
-
-  .upload-hint a {
-    color: var(--accent2);
-    text-decoration: none;
-  }
-
-  .upload-hint a:hover { text-decoration: underline; }
-
-  #fileInput { display: none; }
-
-  /* ─── FILE CHIPS ─── */
-  .files-loaded {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 16px;
-  }
-
-  .file-chip {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 6px 12px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-  }
-
-  .file-chip .month-badge {
-    background: var(--accent);
-    color: #000;
-    border-radius: 3px;
-    padding: 1px 5px;
-    font-weight: 700;
-    font-size: 10px;
-  }
-
-  .file-chip .remove-btn {
-    cursor: pointer;
-    color: var(--muted);
-    font-size: 14px;
-    line-height: 1;
-    transition: color 0.2s;
-  }
-  .file-chip .remove-btn:hover { color: var(--danger); }
-
-  /* ─── STATS ROW ─── */
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 40px;
-  }
-
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 24px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: var(--accent);
-  }
-
-  .stat-card:nth-child(2)::before { background: var(--accent2); }
-  .stat-card:nth-child(3)::before { background: var(--accent3); }
-  .stat-card:nth-child(4)::before { background: #c084fc; }
-
-  .stat-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    margin-bottom: 12px;
-  }
-
-  .stat-value {
-    font-size: 32px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    line-height: 1;
-  }
-
-  .stat-sub {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 6px;
-  }
-
-  /* ─── TAB NAV ─── */
-  .tab-nav {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 32px;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 0;
-  }
-
-  .tab-btn {
-    background: none;
-    border: none;
-    color: var(--muted);
-    font-family: 'Syne', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    padding: 12px 20px;
-    cursor: pointer;
-    position: relative;
-    letter-spacing: 0.04em;
-    transition: color 0.2s;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-  }
-
-  .tab-btn:hover { color: var(--text); }
-
-  .tab-btn.active {
-    color: var(--accent);
-    border-bottom-color: var(--accent);
-  }
-
-  .tab-panel { display: none; }
-  .tab-panel.active { display: block; }
-
-  /* ─── CHART CARDS ─── */
-  .chart-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 24px;
-  }
-
-  .chart-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 28px;
-  }
-
-  .chart-card.full { grid-column: 1 / -1; }
-
-  .chart-title {
-    font-size: 14px;
-    font-weight: 700;
-    margin-bottom: 4px;
-    letter-spacing: 0.02em;
-  }
-
-  .chart-desc {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: var(--muted);
-    margin-bottom: 20px;
-    letter-spacing: 0.08em;
-  }
-
-  .chart-wrap {
-    position: relative;
-    height: 280px;
-  }
-
-  .chart-wrap.tall { height: 360px; }
-
-  /* ─── TOP TABLE ─── */
-  .top-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
-
-  .top-table th {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    color: var(--muted);
-    text-transform: uppercase;
-    padding: 10px 16px;
-    text-align: left;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .top-table td {
-    padding: 10px 16px;
-    border-bottom: 1px solid rgba(34,40,47,0.5);
-    vertical-align: middle;
-  }
-
-  .top-table tr:last-child td { border-bottom: none; }
-  .top-table tr:hover td { background: rgba(255,255,255,0.02); }
-
-  .rank-num {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    width: 32px;
-  }
-
-  .rank-num.gold { color: var(--accent); font-weight: 700; }
-  .rank-num.silver { color: #9ca3af; font-weight: 700; }
-  .rank-num.bronze { color: #cd7f32; font-weight: 700; }
-
-  .bar-cell {
-    width: 140px;
-  }
-
-  .mini-bar {
-    height: 4px;
-    background: var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-
-  .mini-bar-fill {
-    height: 100%;
-    background: var(--accent);
-    border-radius: 2px;
-    transition: width 0.6s ease;
-  }
-
-  .count-cell {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    font-weight: 500;
-    text-align: right;
-  }
-
-  /* ─── FILTERS ─── */
-  .filter-row {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 24px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-
-  .filter-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-
-  .filter-select, .filter-input {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    padding: 8px 12px;
-    cursor: pointer;
-    transition: border-color 0.2s;
-  }
-
-  .filter-select:hover, .filter-input:hover { border-color: var(--accent); }
-  .filter-select:focus, .filter-input:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
-
-  /* ─── EMPTY STATE ─── */
-  .empty-state {
-    text-align: center;
-    padding: 80px 40px;
-    color: var(--muted);
-  }
-
-  .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
-
-  .empty-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text);
-    margin-bottom: 8px;
-    opacity: 0.5;
-  }
-
-  .empty-text {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    line-height: 1.8;
-  }
-
-  /* ─── LOADING ─── */
-  .loading-bar {
-    position: fixed;
-    top: 0; left: 0;
-    height: 2px;
-    background: var(--accent);
-    transition: width 0.3s;
-    z-index: 999;
-    box-shadow: 0 0 10px var(--accent);
-  }
-
-  /* ─── RESPONSIVE ─── */
-  @media (max-width: 900px) {
-    main { padding: 20px; }
-    header { padding: 16px 20px; }
-    .stats-row { grid-template-columns: 1fr 1fr; }
-    .chart-grid { grid-template-columns: 1fr; }
-    .chart-card.full { grid-column: 1; }
-  }
-
-  @media (max-width: 500px) {
-    .stats-row { grid-template-columns: 1fr; }
-  }
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap');
+
+:root {
+  --bg: #07080a;
+  --s1: #0f1115;
+  --s2: #161a1f;
+  --s3: #1d2228;
+  --border: #252b33;
+  --border2: #2e3740;
+  --gold: #f0c040;
+  --gold2: rgba(240,192,64,0.12);
+  --blue: #5b9cf6;
+  --green: #4eca8b;
+  --red: #f06060;
+  --purple: #a78bfa;
+  --orange: #fb923c;
+  --teal: #2dd4bf;
+  --text: #dde2e8;
+  --muted: #5a6370;
+  --muted2: #8a95a0;
+  --radius: 10px;
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--s1); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ── LAYOUT ── */
+.app { display: flex; min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 240px;
+  min-width: 240px;
+  background: var(--s1);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar-logo {
+  padding: 24px 20px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.logo-flag { font-size: 20px; margin-bottom: 6px; }
+.logo-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text);
+}
+.logo-sub {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.nav-section {
+  padding: 16px 12px 8px;
+}
+
+.nav-section-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0 8px;
+  margin-bottom: 6px;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 7px;
+  border: none;
+  background: none;
+  color: var(--muted2);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+  margin-bottom: 2px;
+}
+
+.nav-btn:hover { background: var(--s2); color: var(--text); }
+.nav-btn.active { background: var(--gold2); color: var(--gold); }
+
+.nav-icon { font-size: 15px; width: 18px; text-align: center; }
+
+.sidebar-bottom {
+  margin-top: auto;
+  padding: 16px 12px;
+  border-top: 1px solid var(--border);
+}
+
+.sync-status {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  padding: 8px 12px;
+  background: var(--s2);
+  border-radius: 7px;
+  line-height: 1.6;
+}
+
+.sync-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+  margin-right: 6px;
+  vertical-align: middle;
+  transition: all 0.3s;
+}
+.sync-dot.ok { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.sync-dot.busy { background: var(--gold); box-shadow: 0 0 6px var(--gold); animation: pulse 1s infinite; }
+.sync-dot.err { background: var(--red); }
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ── MAIN CONTENT ── */
+.main {
+  flex: 1;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.topbar {
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(7,8,10,0.8);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.page-title { font-size: 16px; font-weight: 700; }
+.page-sub { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 7px;
+  border: 1px solid var(--border2);
+  background: var(--s2);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn:hover { border-color: var(--gold); color: var(--gold); }
+.btn.primary { background: var(--gold); color: #000; border-color: var(--gold); }
+.btn.primary:hover { background: #ffd060; border-color: #ffd060; color: #000; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.content { padding: 32px; }
+
+/* ── PAGE PANELS ── */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── SECTION TITLE ── */
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.section-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+.section-badge {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 2px 7px;
+}
+
+/* ── CARDS ── */
+.card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+
+.card-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted2);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.card-desc {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  margin-bottom: 18px;
+}
+
+/* ── STAT PILLS ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.stat-pill {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-pill-accent {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  border-radius: 10px 0 0 10px;
+}
+
+.stat-pill:nth-child(1) .stat-pill-accent { background: var(--gold); }
+.stat-pill:nth-child(2) .stat-pill-accent { background: var(--blue); }
+.stat-pill:nth-child(3) .stat-pill-accent { background: var(--green); }
+.stat-pill:nth-child(4) .stat-pill-accent { background: var(--purple); }
+
+.stat-pill-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.stat-pill-value {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.stat-pill-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ── CHARTS GRID ── */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.charts-grid .full { grid-column: 1 / -1; }
+
+.chart-wrap { position: relative; }
+.chart-wrap.h240 { height: 240px; }
+.chart-wrap.h300 { height: 300px; }
+.chart-wrap.h360 { height: 360px; }
+
+/* ── UPLOAD AREA ── */
+.upload-zone {
+  border: 1.5px dashed var(--border2);
+  border-radius: var(--radius);
+  padding: 36px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--s1);
+  margin-bottom: 20px;
+}
+.upload-zone:hover, .upload-zone.over {
+  border-color: var(--gold);
+  background: var(--gold2);
+}
+.upload-zone-icon { font-size: 32px; margin-bottom: 10px; }
+.upload-zone-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.upload-zone-hint {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.upload-zone-hint a { color: var(--blue); text-decoration: none; }
+.upload-zone-hint a:hover { text-decoration: underline; }
+
+/* ── FILE CHIPS ── */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--s2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+}
+.chip-label {
+  background: var(--gold);
+  color: #000;
+  font-weight: 700;
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 9px;
+}
+.chip-remove {
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.chip-remove:hover { color: var(--red); }
+
+/* ── FETCH LOG ── */
+.fetch-log {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted2);
+  line-height: 1.8;
+  max-height: 180px;
+  overflow-y: auto;
+  margin-top: 16px;
+}
+.log-ok { color: var(--green); }
+.log-err { color: var(--red); }
+.log-info { color: var(--blue); }
+.log-warn { color: var(--gold); }
+
+/* ── PRODUCER SELECTOR (comparison page) ── */
+.producer-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.prod-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border2);
+  background: var(--s2);
+  color: var(--muted2);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.prod-chip:hover { border-color: var(--text); color: var(--text); }
+.prod-chip.selected { border-color: transparent; color: #000; font-weight: 700; }
+.prod-chip .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+}
+
+/* ── MODEL PICKER ── */
+.model-pick-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.model-slot {
+  background: var(--s2);
+  border: 1.5px dashed var(--border2);
+  border-radius: var(--radius);
+  padding: 14px;
+  min-height: 90px;
+  position: relative;
+  transition: border-color 0.15s;
+}
+.model-slot.filled {
+  border-style: solid;
+  border-color: var(--border2);
+}
+.model-slot-num {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.model-slot select, .model-slot-make, .model-slot-model {
+  width: 100%;
+  background: var(--s3);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 5px 8px;
+  cursor: pointer;
+  margin-bottom: 5px;
+}
+.model-slot select:focus { outline: none; border-color: var(--gold); }
+.slot-clear {
+  position: absolute;
+  top: 8px; right: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.slot-clear:hover { color: var(--red); }
+.slot-color-bar {
+  height: 3px;
+  border-radius: 2px;
+  margin-top: 6px;
+}
+
+/* ── DATA TABLE ── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.data-table th {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  text-transform: uppercase;
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.data-table td {
+  padding: 9px 14px;
+  border-bottom: 1px solid rgba(37,43,51,0.6);
+  vertical-align: middle;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: rgba(255,255,255,0.015); }
+.data-table .num { font-family: var(--mono); text-align: right; }
+.data-table .rank { font-family: var(--mono); color: var(--muted); font-size: 10px; }
+
+/* ── MINI BAR ── */
+.mbar { height: 4px; background: var(--border); border-radius: 2px; width: 80px; }
+.mbar-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
+
+/* ── EMPTY / LOADING ── */
+.empty {
+  text-align: center;
+  padding: 64px 32px;
+  color: var(--muted);
+}
+.empty-icon { font-size: 40px; margin-bottom: 14px; opacity: 0.35; }
+.empty-title { font-size: 16px; font-weight: 700; color: var(--text); opacity: 0.4; margin-bottom: 6px; }
+.empty-text { font-family: var(--mono); font-size: 11px; line-height: 1.8; }
+
+/* ── PROGRESS BAR ── */
+.progress-bar {
+  position: fixed; top: 0; left: 0;
+  height: 2px; width: 0%;
+  background: var(--gold);
+  box-shadow: 0 0 8px var(--gold);
+  transition: width 0.3s, opacity 0.3s;
+  z-index: 999;
+}
+
+/* ── TOOLTIP ── */
+.tooltip-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--border2);
+  color: var(--muted2);
+  font-size: 9px;
+  cursor: help;
+  margin-left: 4px;
+}
+
+/* ── SCHEDULE BANNER ── */
+.schedule-banner {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+  font-size: 12px;
+}
+.schedule-banner-icon { font-size: 20px; }
+.schedule-banner-text { flex: 1; line-height: 1.6; }
+.schedule-banner b { color: var(--text); }
+.schedule-banner .mono { font-family: var(--mono); color: var(--muted2); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1100px) {
+  .sidebar { width: 200px; min-width: 200px; }
+  .charts-grid { grid-template-columns: 1fr; }
+  .charts-grid .full { grid-column: 1; }
+  .model-pick-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .content { padding: 16px; }
+  .topbar { padding: 14px 16px; }
+  .model-pick-grid { grid-template-columns: 1fr 1fr; }
+}
 </style>
 </head>
 <body>
 
-<div class="loading-bar" id="loadingBar" style="width:0%"></div>
+<div class="progress-bar" id="progressBar"></div>
 
-<!-- HEADER -->
-<header>
-  <div class="logo">
-    <span class="logo-flag">🇪🇪</span>
-    <div>
-      <div class="logo-text">Eesti Kasutatud Autod</div>
-      <div class="logo-sub">USED CAR MARKET DASHBOARD</div>
+<div class="app">
+  <!-- ─── SIDEBAR ─── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-flag">🇪🇪</div>
+      <div class="logo-title">Järelturg Monitor</div>
+      <div class="logo-sub">EE Used Car Market</div>
     </div>
-  </div>
-  <div class="header-status">
-    <div class="status-dot" id="statusDot"></div>
-    <span id="statusText">No data loaded</span>
-  </div>
-</header>
 
-<!-- MAIN -->
-<main>
+    <div class="nav-section">
+      <div class="nav-section-label">Views</div>
+      <button class="nav-btn active" onclick="showPage('overview')">
+        <span class="nav-icon">📊</span> Monthly Overview
+      </button>
+      <button class="nav-btn" onclick="showPage('comparison')">
+        <span class="nav-icon">⚖️</span> Model Comparison
+      </button>
+    </div>
 
-  <!-- UPLOAD -->
-  <div class="upload-section">
-    <div class="section-label">▸ Data Source</div>
-    <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
-      <div class="upload-icon">📂</div>
-      <div class="upload-title">Drop monthly infoleht files here</div>
-      <div class="upload-hint">
-        Accepts .xlsx or .xls files · Load multiple months at once<br>
-        Download from <a href="https://www.transpordiamet.ee/soidukitega-tehtud-toimingute-statistika" target="_blank" onclick="event.stopPropagation()">transpordiamet.ee →</a>
+    <div class="nav-section">
+      <div class="nav-section-label">Data</div>
+      <button class="nav-btn" onclick="showPage('sync')">
+        <span class="nav-icon">🔄</span> Sync & Upload
+      </button>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="sync-status">
+        <span class="sync-dot" id="syncDot"></span>
+        <span id="syncStatusText">No data</span><br>
+        <span id="syncMonthCount" style="color:var(--muted)">0 months loaded</span>
       </div>
     </div>
-    <input type="file" id="fileInput" multiple accept=".xlsx,.xls">
-    <div class="files-loaded" id="filesLoaded"></div>
-  </div>
+  </aside>
 
-  <!-- STATS ROW -->
-  <div class="stats-row" id="statsRow" style="display:none">
-    <div class="stat-card">
-      <div class="stat-label">Total Registrations</div>
-      <div class="stat-value" id="statTotal">—</div>
-      <div class="stat-sub" id="statPeriod">across loaded months</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Top Make</div>
-      <div class="stat-value" id="statTopMake" style="font-size:22px">—</div>
-      <div class="stat-sub" id="statTopMakeCnt">registrations</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Months Loaded</div>
-      <div class="stat-value" id="statMonths">—</div>
-      <div class="stat-sub" id="statRange">date range</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Unique Makes</div>
-      <div class="stat-value" id="statMakes">—</div>
-      <div class="stat-sub">distinct brands</div>
-    </div>
-  </div>
-
-  <!-- TABS -->
-  <div id="dashboardArea" style="display:none">
-
-    <div class="tab-nav">
-      <button class="tab-btn active" onclick="switchTab('volume')">📈 Monthly Volume</button>
-      <button class="tab-btn" onclick="switchTab('makes')">🏆 Top Makes & Models</button>
-      <button class="tab-btn" onclick="switchTab('trends')">🔍 Make Deep-Dive</button>
+  <!-- ─── MAIN ─── -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="page-title" id="pageTitle">Monthly Overview</div>
+        <div class="page-sub" id="pageSub">Top 5 makes · järelturg transactions</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn" onclick="showPage('sync')">⬆ Load Data</button>
+        <button class="btn primary" onclick="triggerAutoFetch()" id="fetchBtn">🔄 Fetch Latest</button>
+      </div>
     </div>
 
-    <!-- TAB: VOLUME -->
-    <div class="tab-panel active" id="tab-volume">
-      <div class="chart-grid">
-        <div class="chart-card full">
-          <div class="chart-title">Monthly Registration Volume</div>
-          <div class="chart-desc">FIRST-TIME REGISTRATIONS · ALL PASSENGER CARS · M1 CATEGORY</div>
-          <div class="chart-wrap tall">
-            <canvas id="chartVolume"></canvas>
+    <div class="content">
+
+      <!-- ══════════ PAGE: OVERVIEW ══════════ -->
+      <div class="page active" id="page-overview">
+
+        <!-- empty state -->
+        <div id="overviewEmpty" class="empty">
+          <div class="empty-icon">📈</div>
+          <div class="empty-title">No data loaded</div>
+          <div class="empty-text">Go to Sync & Upload to load monthly infoleht files<br>or click "Fetch Latest" to download automatically</div>
+        </div>
+
+        <!-- dashboard -->
+        <div id="overviewDash" style="display:none">
+          <div class="stats-grid" id="overviewStats"></div>
+
+          <div class="charts-grid">
+            <div class="card full">
+              <div class="card-title">Top 5 Makes — Monthly Transaction Volume</div>
+              <div class="card-desc">JÄRELTURG · OWNER CHANGE REGISTRATIONS PER MONTH</div>
+              <div class="chart-wrap h300">
+                <canvas id="chartOverviewLine"></canvas>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">Market Share by Make</div>
+              <div class="card-desc">ALL LOADED MONTHS COMBINED</div>
+              <div class="chart-wrap h240">
+                <canvas id="chartOverviewDonut"></canvas>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">Monthly Total Transactions</div>
+              <div class="card-desc">ALL MAKES · JÄRELTURG VOLUME</div>
+              <div class="chart-wrap h240">
+                <canvas id="chartOverviewTotal"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- ranked table -->
+          <div class="card" style="margin-top:0">
+            <div class="card-title">Top Makes Ranked</div>
+            <div class="card-desc" id="overviewTableDesc">CUMULATIVE ACROSS ALL LOADED MONTHS</div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Make</th>
+                  <th class="num">Transactions</th>
+                  <th class="num">Share</th>
+                  <th>Trend</th>
+                </tr>
+              </thead>
+              <tbody id="overviewTableBody"></tbody>
+            </table>
           </div>
         </div>
-        <div class="chart-card">
-          <div class="chart-title">YoY Monthly Comparison</div>
-          <div class="chart-desc">SAME MONTH ACROSS YEARS</div>
-          <div class="chart-wrap">
-            <canvas id="chartYoY"></canvas>
-          </div>
-        </div>
-        <div class="chart-card">
-          <div class="chart-title">Registration Mix</div>
-          <div class="chart-desc">NEW vs USED SHARE</div>
-          <div class="chart-wrap">
-            <canvas id="chartMix"></canvas>
-          </div>
-        </div>
       </div>
-    </div>
 
-    <!-- TAB: MAKES -->
-    <div class="tab-panel" id="tab-makes">
-      <div class="filter-row">
-        <span class="filter-label">Period:</span>
-        <select class="filter-select" id="makesPeriodFilter" onchange="renderMakesTab()">
-          <option value="all">All loaded months</option>
-        </select>
-        <span class="filter-label">Show top:</span>
-        <select class="filter-select" id="makesTopN" onchange="renderMakesTab()">
-          <option value="10">10</option>
-          <option value="20">20</option>
-          <option value="30">30</option>
-        </select>
-      </div>
-      <div class="chart-grid">
-        <div class="chart-card">
-          <div class="chart-title">Top Makes by Volume</div>
-          <div class="chart-desc">FIRST-TIME REGISTRATIONS · SORTED BY COUNT</div>
-          <div class="chart-wrap tall">
-            <canvas id="chartTopMakes"></canvas>
+      <!-- ══════════ PAGE: COMPARISON ══════════ -->
+      <div class="page" id="page-comparison">
+
+        <div id="comparisonEmpty" class="empty">
+          <div class="empty-icon">⚖️</div>
+          <div class="empty-title">No data loaded</div>
+          <div class="empty-text">Load data first, then select up to 5 makes and models to compare</div>
+        </div>
+
+        <div id="comparisonDash" style="display:none">
+
+          <!-- Slot picker -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-title" style="margin-bottom:12px">Select up to 5 Make · Model combinations</div>
+            <div class="model-pick-grid" id="modelPickGrid"></div>
+            <button class="btn" onclick="renderComparison()" style="margin-top:4px">📊 Update Charts</button>
+          </div>
+
+          <div id="comparisonCharts" style="display:none">
+            <div class="charts-grid">
+              <div class="card full">
+                <div class="card-title">Monthly Transaction Volume</div>
+                <div class="card-desc">TRANSACTIONS PER MONTH · SELECTED MODELS</div>
+                <div class="chart-wrap h300">
+                  <canvas id="chartCmpTrend"></canvas>
+                </div>
+              </div>
+              <div class="card full">
+                <div class="card-title">Transactions by Production Year</div>
+                <div class="card-desc">HOW MANY TRANSACTIONS PER PRODUCTION YEAR · ALL LOADED MONTHS</div>
+                <div class="chart-wrap h300">
+                  <canvas id="chartCmpByYear"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- Summary cards -->
+            <div id="cmpSummaryCards" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px"></div>
+
+            <!-- Transactions table -->
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-title">Transaction Summary</div>
+              <div class="card-desc">TOTAL TRANSACTIONS PER SELECTED MODEL ACROSS ALL LOADED MONTHS</div>
+              <table class="data-table" id="cmpTxTable">
+                <thead>
+                  <tr>
+                    <th>Make · Model</th>
+                    <th class="num">Total Tx</th>
+                    <th class="num">Avg / Month</th>
+                    <th class="num">Peak Month</th>
+                    <th class="num">Peak Vol</th>
+                    <th>Volume</th>
+                  </tr>
+                </thead>
+                <tbody id="cmpTxTableBody"></tbody>
+              </table>
+            </div>
+
+            <!-- By-year table -->
+            <div class="card">
+              <div class="card-title">Transactions by Production Year</div>
+              <div class="card-desc">HOW MANY OWNER-CHANGES FOR EACH PRODUCTION YEAR OF THE VEHICLE</div>
+              <table class="data-table" id="cmpYearTable">
+                <thead>
+                  <tr id="cmpYearTableHead">
+                    <th>Prod. Year</th>
+                  </tr>
+                </thead>
+                <tbody id="cmpYearTableBody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
-        <div class="chart-card">
-          <div class="chart-title">Market Share</div>
-          <div class="chart-desc">TOP 10 MAKES · PERCENT OF TOTAL</div>
-          <div class="chart-wrap">
-            <canvas id="chartMakePie"></canvas>
+      </div>
+
+      <!-- ══════════ PAGE: SYNC ══════════ -->
+      <div class="page" id="page-sync">
+
+        <div class="schedule-banner">
+          <span class="schedule-banner-icon">📅</span>
+          <div class="schedule-banner-text">
+            <b>Auto-fetch runs on the 20th of each month.</b> When you open this dashboard on or after the 20th, it will automatically try to fetch the newest infoleht file from Transpordiamet.<br>
+            <span class="mono">Source: transpordiamet.ee · Tab: järelturg · Sheet: omanikuvahetused / owner changes</span>
           </div>
         </div>
-        <div class="chart-card full">
-          <div class="chart-title">Top Makes — Ranked List</div>
-          <div class="chart-desc">ALL MAKES SORTED BY VOLUME</div>
-          <table class="top-table" id="makesTable">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Make</th>
-                <th>Volume</th>
-                <th>Share</th>
-                <th class="bar-cell">Bar</th>
-              </tr>
-            </thead>
-            <tbody id="makesTableBody"></tbody>
-          </table>
+
+        <div class="section-head">
+          <div class="section-title">Manual File Upload</div>
+          <span class="section-badge">XLSX / XLS</span>
+        </div>
+
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+          <div class="upload-zone-icon">📂</div>
+          <div class="upload-zone-title">Drop infoleht files here</div>
+          <div class="upload-zone-hint">
+            Accepts .xlsx or .xls monthly files · Multiple files supported<br>
+            <a href="https://www.transpordiamet.ee/soidukitega-tehtud-toimingute-statistika" target="_blank" onclick="event.stopPropagation()">transpordiamet.ee →</a>
+          </div>
+        </div>
+        <input type="file" id="fileInput" multiple accept=".xlsx,.xls" style="display:none">
+        <div class="chips" id="fileChips"></div>
+
+        <div style="margin-top:24px;margin-bottom:12px" class="section-head">
+          <div class="section-title">Auto-Fetch Log</div>
+          <span class="section-badge">CORS PROXY REQUIRED FOR DIRECT FETCH</span>
+        </div>
+        <div class="fetch-log" id="fetchLog">
+          <span class="log-info">ℹ</span> Ready. Transpordiamet files require manual download due to CORS restrictions.<br>
+          <span class="log-info">ℹ</span> Upload files manually above, or self-host with a CORS proxy.<br>
+        </div>
+
+        <div style="margin-top:24px">
+          <div class="section-head" style="margin-bottom:12px">
+            <div class="section-title">Loaded Months</div>
+            <span class="section-badge" id="loadedCount">0 FILES</span>
+          </div>
+          <div id="loadedMonthsList" class="card">
+            <div class="empty" style="padding:32px">
+              <div class="empty-text">No months loaded yet</div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- TAB: DEEP DIVE -->
-    <div class="tab-panel" id="tab-trends">
-      <div class="filter-row">
-        <span class="filter-label">Make:</span>
-        <select class="filter-select" id="deepDiveMake" onchange="renderDeepDive()">
-          <option value="">Select a make...</option>
-        </select>
-      </div>
-      <div id="deepDiveContent">
-        <div class="empty-state">
-          <div class="empty-icon">🔍</div>
-          <div class="empty-title">Select a make above</div>
-          <div class="empty-text">Choose a brand to see its monthly trend<br>and top models breakdown</div>
-        </div>
-      </div>
     </div>
-
   </div>
-
-  <!-- EMPTY STATE (no data) -->
-  <div class="empty-state" id="emptyState">
-    <div class="empty-icon">📊</div>
-    <div class="empty-title">No data loaded yet</div>
-    <div class="empty-text">
-      Upload one or more monthly infoleht files above<br>
-      to start exploring the Estonian used car market
-    </div>
-  </div>
-
-</main>
+</div>
 
 <script>
-// ─────────────────────────────────────────────
+// ═══════════════════════════════════════════════
 // STATE
-// ─────────────────────────────────────────────
-let allData = []; // [{month, year, label, rows:[{make,model,isNew,count}]}]
+// ═══════════════════════════════════════════════
+const DB_KEY = 'jarelturDB_v3';
+let db = loadDB(); // { months: [{label, year, month, rows:[{make,model,prodYear,count}]}] }
 let charts = {};
 
-// ─────────────────────────────────────────────
-// DRAG & DROP
-// ─────────────────────────────────────────────
-const uploadArea = document.getElementById('uploadArea');
-uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
-uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
-uploadArea.addEventListener('drop', e => {
-  e.preventDefault();
-  uploadArea.classList.remove('drag-over');
-  handleFiles(e.dataTransfer.files);
-});
-document.getElementById('fileInput').addEventListener('change', e => handleFiles(e.target.files));
+// Comparison slots: up to 5 {make, model}
+let slots = [null, null, null, null, null];
 
-// ─────────────────────────────────────────────
-// FILE HANDLING
-// ─────────────────────────────────────────────
-async function handleFiles(files) {
-  setLoading(true);
-  for (const file of files) {
-    await parseFile(file);
+const COLORS = ['#f0c040','#5b9cf6','#4eca8b','#f06060','#a78bfa'];
+const MAKE_COLORS = {
+  'VOLKSWAGEN':'#5b9cf6','TOYOTA':'#f06060','BMW':'#4eca8b','MERCEDES-BENZ':'#a78bfa',
+  'AUDI':'#fb923c','VOLVO':'#2dd4bf','SKODA':'#f0c040','FORD':'#e879f9',
+  'HONDA':'#f87171','HYUNDAI':'#34d399','KIA':'#fbbf24','NISSAN':'#818cf8',
+  'MAZDA':'#6ee7b7','RENAULT':'#fca5a5','OPEL':'#67e8f9',
+};
+
+function colorFor(make, idx) {
+  return MAKE_COLORS[make] || COLORS[idx % COLORS.length];
+}
+
+// ═══════════════════════════════════════════════
+// PERSISTENCE
+// ═══════════════════════════════════════════════
+function loadDB() {
+  try {
+    const raw = localStorage.getItem(DB_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { months: [] };
+}
+
+function saveDB() {
+  try {
+    localStorage.setItem(DB_KEY, JSON.stringify(db));
+  } catch(e) {
+    log('warn', 'Storage quota exceeded — data not persisted');
   }
-  setLoading(false);
-  allData.sort((a, b) => a.year*100+a.month - (b.year*100+b.month));
-  updateUI();
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+const pageTitles = {
+  overview: ['Monthly Overview', 'Top 5 makes · järelturg transactions'],
+  comparison: ['Model Comparison', 'Up to 5 models · transactions & production year'],
+  sync: ['Sync & Upload', 'Load monthly infoleht files from Transpordiamet'],
+};
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`page-${id}`).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    if (b.textContent.toLowerCase().includes(id === 'sync' ? 'sync' : id === 'comparison' ? 'comparison' : 'overview'))
+      b.classList.add('active');
+  });
+  const [t, s] = pageTitles[id];
+  document.getElementById('pageTitle').textContent = t;
+  document.getElementById('pageSub').textContent = s;
+  if (id === 'overview') renderOverview();
+  if (id === 'comparison') renderComparisonPage();
+}
+
+// ═══════════════════════════════════════════════
+// FILE HANDLING
+// ═══════════════════════════════════════════════
+const uploadZone = document.getElementById('uploadZone');
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('over'));
+uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('over'); handleFiles(e.dataTransfer.files); });
+document.getElementById('fileInput').addEventListener('change', e => { handleFiles(e.target.files); e.target.value=''; });
+
+async function handleFiles(files) {
+  setProgress(10);
+  let loaded = 0;
+  for (const f of files) {
+    const ok = await parseFile(f);
+    if (ok) loaded++;
+    setProgress(10 + 80 * loaded / files.length);
+  }
+  setProgress(100);
+  db.months.sort((a,b) => a.year*100+a.month - (b.year*100+b.month));
+  saveDB();
+  updateSidebarStatus();
+  updateSyncPage();
+  log('ok', `Loaded ${loaded} file(s). ${db.months.length} months in database.`);
 }
 
 async function parseFile(file) {
@@ -679,608 +909,682 @@ async function parseFile(file) {
     reader.onload = e => {
       try {
         const wb = XLSX.read(e.target.result, { type: 'array' });
-        const parsed = extractData(wb, file.name);
-        if (parsed) {
-          // remove old entry for same period
-          allData = allData.filter(d => !(d.month === parsed.month && d.year === parsed.year));
-          allData.push(parsed);
-          addFileChip(file.name, parsed.label);
+        const info = detectMonthYear(file.name, wb);
+        if (!info) { log('err', `Could not detect month/year for: ${file.name}`); resolve(false); return; }
+
+        const rows = extractJarelturg(wb, info, file.name);
+        if (!rows || rows.length === 0) {
+          log('warn', `No järelturg data found in ${file.name} (sheets: ${wb.SheetNames.join(', ')})`);
+          resolve(false);
+          return;
         }
+
+        // upsert
+        db.months = db.months.filter(m => !(m.year===info.year && m.month===info.month));
+        db.months.push({ ...info, rows });
+        addChip(file.name, info.label);
+        log('ok', `✓ ${info.label}: ${rows.length} rows from "${info.sheetUsed}"`);
+        resolve(true);
       } catch(err) {
-        console.error('Parse error', file.name, err);
+        log('err', `Parse error ${file.name}: ${err.message}`);
+        resolve(false);
       }
-      resolve();
     };
     reader.readAsArrayBuffer(file);
   });
 }
 
-function extractData(wb, filename) {
-  // ── detect month/year from filename e.g. INFOLEHT-022026.xlsx
-  const fnMatch = filename.match(/(\d{2})(\d{4})/);
-  let month, year;
-  if (fnMatch) {
-    month = parseInt(fnMatch[1]);
-    year = parseInt(fnMatch[2]);
-  } else {
-    // fallback: try to get from any sheet
-    month = 1; year = 2024;
+function detectMonthYear(filename, wb) {
+  const mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  // Filename pattern: INFOLEHT-MMYYYY or INFOLEHT-MM-YYYY
+  let m = filename.match(/[_\-]0?(\d{1,2})[-_]?(20\d{2})/);
+  if (!m) m = filename.match(/(20\d{2})[_\-]0?(\d{1,2})/);
+  if (m) {
+    let month, year;
+    if (parseInt(m[1]) > 12) { year=parseInt(m[1]); month=parseInt(m[2]); }
+    else { month=parseInt(m[1]); year=parseInt(m[2]); }
+    return { month, year, label: `${mn[month-1]} ${year}`, sheetUsed: '' };
   }
+  return null;
+}
 
-  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const label = `${monthNames[month-1]} ${year}`;
+function extractJarelturg(wb, info, filename) {
+  // Priority: find sheet whose name contains järelturg / jarelturg / omaniku / owner / transactions
+  const priority = wb.SheetNames.filter(n => {
+    const lo = n.toLowerCase();
+    return lo.includes('järelturg') || lo.includes('jarelturg') || lo.includes('omaniku') ||
+           lo.includes('owner') || lo.includes('used') || lo.includes('kasutatud');
+  });
+  const sheetsToTry = [...priority, ...wb.SheetNames.filter(n => !priority.includes(n))];
 
-  // ── look through sheets for the used car data
-  // The infoleht files typically have sheets for passenger cars
-  // We look for a sheet with "esmased" or "M1" or the first data sheet
-  let rows = [];
-
-  for (const sheetName of wb.SheetNames) {
+  for (const sheetName of sheetsToTry) {
     const ws = wb.Sheets[sheetName];
     const json = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
     if (!json || json.length < 3) continue;
 
-    // Try to find make/model columns
-    // Typical structure: rows with MARK (make), MUDEL (model), count columns
-    const parsed = tryParseSheet(json, sheetName);
-    if (parsed && parsed.length > 0) {
-      rows = [...rows, ...parsed];
+    const rows = tryParseJarelturgSheet(json);
+    if (rows && rows.length > 5) {
+      info.sheetUsed = sheetName;
+      return rows;
     }
   }
-
-  // Deduplicate by make+model+isNew, summing counts
-  const aggMap = {};
-  for (const r of rows) {
-    const key = `${r.make}|||${r.model}|||${r.isNew}`;
-    if (!aggMap[key]) aggMap[key] = { ...r, count: 0 };
-    aggMap[key].count += r.count;
-  }
-  rows = Object.values(aggMap).filter(r => r.count > 0 && r.make);
-
-  if (rows.length === 0) {
-    // Fallback: create demo-labeled entry so user sees something
-    console.warn('No structured data found in', filename, '— will show raw sheet names');
-    return null;
-  }
-
-  return { month, year, label, rows };
+  return [];
 }
 
-function tryParseSheet(json, sheetName) {
+function tryParseJarelturgSheet(json) {
   const rows = [];
+  // Find header row with MARK/MUDEL columns
+  let hRow = -1, makeCol = -1, modelCol = -1, prodYearCol = -1, countCol = -1;
 
-  // Find header row — look for row containing MARK or MÄRK or make-like column
-  let headerRow = -1;
-  let makeCol = -1, modelCol = -1, countCol = -1, newCol = -1;
-
-  for (let i = 0; i < Math.min(json.length, 20); i++) {
+  for (let i = 0; i < Math.min(json.length, 25); i++) {
     const row = json[i].map(c => String(c).toLowerCase().trim());
-    // Look for "mark" or "make" or "märk"
-    const mkIdx = row.findIndex(c =>
-      c === 'mark' || c === 'märk' || c === 'make' ||
-      c.includes('mark') || c.includes('märk')
+    const mkIdx = row.findIndex(c => c === 'mark' || c === 'märk' || c === 'make' || (c.includes('mark') && c.length < 8));
+    if (mkIdx < 0) continue;
+
+    hRow = i;
+    makeCol = mkIdx;
+    // model: next col or "mudel"
+    modelCol = row.findIndex((c, idx) => idx !== mkIdx && (c === 'mudel' || c === 'model' || c.includes('mudel')));
+    if (modelCol < 0) modelCol = mkIdx + 1;
+
+    // production year: "aasta" or "tootmis" or "aastamudel"
+    prodYearCol = row.findIndex(c =>
+      c.includes('aasta') || c === 'year' || c.includes('tootmis') || c === 'prod' || c === 'year'
     );
-    if (mkIdx >= 0) {
-      headerRow = i;
-      makeCol = mkIdx;
 
-      // Look for model col
-      modelCol = row.findIndex((c, idx) =>
-        idx !== mkIdx && (c === 'mudel' || c === 'model' || c.includes('mudel'))
-      );
-      if (modelCol < 0) modelCol = mkIdx + 1;
-
-      // Look for count/total col — usually "kokku" or "esmaselt" or "arv"
-      countCol = row.findIndex(c =>
-        c === 'kokku' || c.includes('kokku') || c === 'arv' || c === 'total' ||
-        c.includes('esm') || c.includes('arv')
-      );
-      if (countCol < 0) {
-        // take the last numeric-looking column
-        for (let j = row.length - 1; j >= 0; j--) {
-          if (row[j] === '' || /\d/.test(row[j]) || row[j] === 'total') {
-            countCol = j;
-            break;
-          }
+    // count: "arv" or "kokku" or "hulk" or "transactions" — last numeric header
+    countCol = row.findIndex(c =>
+      c === 'arv' || c === 'kokku' || c === 'hulk' || c === 'transactions' || c.includes('count')
+    );
+    if (countCol < 0) {
+      // take rightmost column that looks like a count header (number-like or empty)
+      for (let j = row.length - 1; j > (modelCol >= 0 ? modelCol : mkIdx); j--) {
+        if (/^\d+$/.test(row[j]) || row[j] === '' || row[j] === 'arv' || row[j] === 'hulk') {
+          countCol = j; break;
         }
       }
-
-      // Look for "new" flag col — "uus" or "uued"
-      newCol = row.findIndex(c =>
-        c === 'uus' || c === 'uued' || c.includes('uus') || c === 'new'
-      );
-
-      break;
     }
+    if (countCol < 0) countCol = row.length - 1;
+    break;
   }
 
-  if (headerRow < 0 || makeCol < 0) return [];
+  if (hRow < 0 || makeCol < 0) return null;
 
-  // Now parse data rows
-  for (let i = headerRow + 1; i < json.length; i++) {
+  for (let i = hRow + 1; i < json.length; i++) {
     const row = json[i];
     const make = String(row[makeCol] || '').trim().toUpperCase();
-    if (!make || make.length === 0 || make === 'KOKKU' || make === 'TOTAL' ||
-        make.toLowerCase() === 'mark' || make.toLowerCase() === 'märk') continue;
+    if (!make || make.length === 0) continue;
+    // skip summary rows
+    if (['KOKKU','TOTAL','ZUSAMMEN','SUM'].includes(make)) continue;
+    if (make.toLowerCase() === 'mark' || make.toLowerCase() === 'märk') continue;
 
     const model = modelCol >= 0 ? String(row[modelCol] || '').trim().toUpperCase() : '';
+    let prodYear = null;
+    if (prodYearCol >= 0) {
+      const py = parseInt(row[prodYearCol]);
+      if (py >= 1950 && py <= new Date().getFullYear() + 1) prodYear = py;
+    }
+
     let count = 0;
-    if (countCol >= 0) {
-      const raw = row[countCol];
-      count = parseInt(String(raw).replace(/\s/g, '').replace(',', '.')) || 0;
-    } else {
-      // sum all numeric cols after modelCol
-      for (let j = (modelCol >= 0 ? modelCol : makeCol) + 1; j < row.length; j++) {
-        const v = parseInt(String(row[j]).replace(/\s/g, '')) || 0;
+    if (countCol >= 0 && row[countCol] !== undefined) {
+      count = parseInt(String(row[countCol]).replace(/[\s,]/g, '')) || 0;
+    }
+
+    // If count is 0, try summing all numeric cols after model
+    if (count === 0) {
+      const startCol = Math.max(makeCol, modelCol >= 0 ? modelCol : 0, prodYearCol >= 0 ? prodYearCol : 0) + 1;
+      for (let j = startCol; j < row.length; j++) {
+        const v = parseInt(String(row[j]).replace(/[\s,]/g, '')) || 0;
         count += v;
       }
     }
 
-    const isNew = newCol >= 0 ? (parseInt(row[newCol]) || 0) > 0 : false;
-
     if (count > 0 && make) {
-      rows.push({ make, model, isNew, count });
+      rows.push({ make, model, prodYear, count });
     }
   }
-
   return rows;
 }
 
-// ─────────────────────────────────────────────
-// UI UPDATE
-// ─────────────────────────────────────────────
-function updateUI() {
-  const hasData = allData.length > 0;
-  document.getElementById('emptyState').style.display = hasData ? 'none' : 'block';
-  document.getElementById('statsRow').style.display = hasData ? 'grid' : 'none';
-  document.getElementById('dashboardArea').style.display = hasData ? 'block' : 'none';
+// ═══════════════════════════════════════════════
+// AUTO FETCH (20th of month)
+// ═══════════════════════════════════════════════
+const FILE_URL_TEMPLATE = (mm, yyyy) =>
+  `https://api.allorigins.win/raw?url=https://www.transpordiamet.ee/sites/default/files/documents/${yyyy}-${String(mm).padStart(2,'0')}/INFOLEHT-${String(mm).padStart(2,'0')}${yyyy}.xlsx`;
 
-  if (!hasData) return;
+// Also try xls
+const FILE_URL_XLS = (mm, yyyy) =>
+  `https://api.allorigins.win/raw?url=https://www.transpordiamet.ee/sites/default/files/documents/${yyyy}-${String(mm).padStart(2,'0')}/INFOLEHT-${String(mm).padStart(2,'0')}${yyyy}.xls`;
 
-  // Status
-  document.getElementById('statusDot').classList.add('active');
-  document.getElementById('statusText').textContent = `${allData.length} month${allData.length>1?'s':''} loaded`;
+async function triggerAutoFetch() {
+  const btn = document.getElementById('fetchBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Fetching…';
+  showPage('sync');
 
-  // Stats
-  const allRows = allData.flatMap(d => d.rows);
-  const total = allRows.reduce((s, r) => s + r.count, 0);
-  const makeMap = {};
-  allRows.forEach(r => { makeMap[r.make] = (makeMap[r.make] || 0) + r.count; });
-  const sorted = Object.entries(makeMap).sort((a,b) => b[1]-a[1]);
-
-  document.getElementById('statTotal').textContent = total.toLocaleString();
-  document.getElementById('statPeriod').textContent = `across ${allData.length} month${allData.length>1?'s':''}`;
-  document.getElementById('statTopMake').textContent = sorted[0]?.[0] || '—';
-  document.getElementById('statTopMakeCnt').textContent = sorted[0] ? `${sorted[0][1].toLocaleString()} registrations` : '';
-  document.getElementById('statMonths').textContent = allData.length;
-  document.getElementById('statRange').textContent = allData.length > 1
-    ? `${allData[0].label} – ${allData[allData.length-1].label}`
-    : allData[0].label;
-  document.getElementById('statMakes').textContent = Object.keys(makeMap).length;
-
-  // Populate period filter
-  const pf = document.getElementById('makesPeriodFilter');
-  pf.innerHTML = '<option value="all">All loaded months</option>';
-  allData.forEach(d => {
-    const opt = document.createElement('option');
-    opt.value = `${d.year}-${d.month}`;
-    opt.textContent = d.label;
-    pf.appendChild(opt);
-  });
-
-  // Populate deep dive make selector
-  const dm = document.getElementById('deepDiveMake');
-  const prev = dm.value;
-  dm.innerHTML = '<option value="">Select a make...</option>';
-  sorted.forEach(([make]) => {
-    const opt = document.createElement('option');
-    opt.value = make;
-    opt.textContent = make;
-    dm.appendChild(opt);
-  });
-  if (prev) dm.value = prev;
-
-  renderVolumeTab();
-  renderMakesTab();
-  renderDeepDive();
-}
-
-// ─────────────────────────────────────────────
-// CHARTS HELPERS
-// ─────────────────────────────────────────────
-const PALETTE = ['#e8c547','#4f9cf9','#63d4a0','#f87171','#c084fc','#fb923c','#38bdf8','#a3e635','#f472b6','#34d399','#fbbf24','#818cf8','#e879f9','#6ee7b7','#fca5a5'];
-
-function destroyChart(id) {
-  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
-}
-
-function mkChart(id, config) {
-  destroyChart(id);
-  const ctx = document.getElementById(id).getContext('2d');
-  charts[id] = new Chart(ctx, config);
-}
-
-const gridStyle = {
-  color: 'rgba(255,255,255,0.05)',
-  borderColor: 'rgba(255,255,255,0.05)'
-};
-
-const tickStyle = {
-  color: '#6b7280',
-  font: { family: "'JetBrains Mono', monospace", size: 10 }
-};
-
-// ─────────────────────────────────────────────
-// TAB: VOLUME
-// ─────────────────────────────────────────────
-function renderVolumeTab() {
-  const labels = allData.map(d => d.label);
-  const totals = allData.map(d => d.rows.reduce((s,r) => s+r.count, 0));
-  const usedTotals = allData.map(d => d.rows.filter(r => !r.isNew).reduce((s,r) => s+r.count, 0));
-  const newTotals = allData.map(d => d.rows.filter(r => r.isNew).reduce((s,r) => s+r.count, 0));
-
-  // Monthly volume bar
-  mkChart('chartVolume', {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Total Registrations',
-        data: totals,
-        backgroundColor: totals.map((_, i) => `rgba(232,197,71,${0.5 + 0.5*(i/(totals.length-1||1))})`),
-        borderColor: '#e8c547',
-        borderWidth: 1,
-        borderRadius: 4,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y.toLocaleString()} registrations` }}
-      },
-      scales: {
-        x: { grid: gridStyle, ticks: tickStyle },
-        y: { grid: gridStyle, ticks: { ...tickStyle, callback: v => v.toLocaleString() } }
-      }
-    }
-  });
-
-  // YoY: group by month number
-  const byMonth = {};
-  allData.forEach(d => {
-    const mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.month-1];
-    if (!byMonth[mn]) byMonth[mn] = {};
-    byMonth[mn][d.year] = d.rows.reduce((s,r) => s+r.count, 0);
-  });
-  const years = [...new Set(allData.map(d => d.year))].sort();
-  const monthsPresent = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-    .filter(m => byMonth[m]);
-
-  mkChart('chartYoY', {
-    type: 'line',
-    data: {
-      labels: monthsPresent,
-      datasets: years.map((yr, i) => ({
-        label: String(yr),
-        data: monthsPresent.map(m => byMonth[m]?.[yr] || null),
-        borderColor: PALETTE[i],
-        backgroundColor: 'transparent',
-        pointBackgroundColor: PALETTE[i],
-        tension: 0.3,
-        spanGaps: true,
-        pointRadius: 4,
-      }))
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          labels: { color: '#9ca3af', font: { family: "'JetBrains Mono', monospace", size: 10 } }
-        }
-      },
-      scales: {
-        x: { grid: gridStyle, ticks: tickStyle },
-        y: { grid: gridStyle, ticks: { ...tickStyle, callback: v => v.toLocaleString() } }
-      }
-    }
-  });
-
-  // Mix donut (last month or all)
-  const lastNew = newTotals.reduce((s,v)=>s+v,0);
-  const lastUsed = usedTotals.reduce((s,v)=>s+v,0);
-  mkChart('chartMix', {
-    type: 'doughnut',
-    data: {
-      labels: ['Used (First Reg)', 'New'],
-      datasets: [{
-        data: [lastUsed || totals.reduce((s,v)=>s+v,0), lastNew],
-        backgroundColor: ['#e8c547', '#4f9cf9'],
-        borderColor: '#111418',
-        borderWidth: 3,
-        hoverOffset: 6,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '65%',
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: { color: '#9ca3af', font: { family: "'JetBrains Mono', monospace", size: 10 }, padding: 16 }
-        },
-        tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.toLocaleString()} (${Math.round(ctx.parsed*100/(lastNew+lastUsed||1))}%)` }}
-      }
-    }
-  });
-}
-
-// ─────────────────────────────────────────────
-// TAB: MAKES
-// ─────────────────────────────────────────────
-function renderMakesTab() {
-  const periodVal = document.getElementById('makesPeriodFilter').value;
-  const topN = parseInt(document.getElementById('makesTopN').value);
-
-  let source;
-  if (periodVal === 'all') {
-    source = allData.flatMap(d => d.rows);
-  } else {
-    const [y,m] = periodVal.split('-').map(Number);
-    const entry = allData.find(d => d.year===y && d.month===m);
-    source = entry ? entry.rows : [];
+  const now = new Date();
+  // Determine which month to fetch: if day >= 20 fetch current month, else fetch previous
+  let fetchYear = now.getFullYear();
+  let fetchMonth = now.getMonth() + 1; // current month
+  if (now.getDate() < 20) {
+    fetchMonth--;
+    if (fetchMonth === 0) { fetchMonth = 12; fetchYear--; }
   }
 
-  const makeMap = {};
-  source.forEach(r => { makeMap[r.make] = (makeMap[r.make] || 0) + r.count; });
-  const sorted = Object.entries(makeMap).sort((a,b) => b[1]-a[1]);
-  const total = sorted.reduce((s,[,v]) => s+v, 0);
-  const topItems = sorted.slice(0, topN);
+  log('info', `Trying to fetch ${fetchMonth}/${fetchYear} via CORS proxy…`);
+  setProgress(20);
 
-  // Bar chart
-  mkChart('chartTopMakes', {
-    type: 'bar',
-    indexAxis: 'y',
-    data: {
-      labels: topItems.map(([k]) => k),
-      datasets: [{
-        data: topItems.map(([,v]) => v),
-        backgroundColor: topItems.map((_, i) => PALETTE[i % PALETTE.length] + 'cc'),
-        borderColor: topItems.map((_, i) => PALETTE[i % PALETTE.length]),
-        borderWidth: 1,
-        borderRadius: 3,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: gridStyle, ticks: { ...tickStyle, callback: v => v.toLocaleString() } },
-        y: { grid: { display: false }, ticks: { ...tickStyle, font: { family: "'JetBrains Mono', monospace", size: 11 } } }
-      }
+  // Try xlsx first, then xls
+  for (const urlFn of [FILE_URL_TEMPLATE, FILE_URL_XLS]) {
+    const url = urlFn(fetchMonth, fetchYear);
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) { log('warn', `HTTP ${resp.status} for ${url.slice(0,60)}…`); continue; }
+      const buf = await resp.arrayBuffer();
+      if (buf.byteLength < 1000) { log('warn', 'Response too small — likely not a valid file'); continue; }
+      const ext = url.includes('.xls?') || url.endsWith('.xls') ? '.xls' : '.xlsx';
+      const fakeName = `INFOLEHT-${String(fetchMonth).padStart(2,'0')}${fetchYear}${ext}`;
+      const fakeFile = new File([buf], fakeName);
+      setProgress(60);
+      await handleFiles([fakeFile]);
+      log('ok', `Auto-fetch complete: ${fakeName}`);
+      setProgress(100);
+      btn.disabled = false; btn.textContent = '🔄 Fetch Latest';
+      return;
+    } catch(err) {
+      log('warn', `Fetch failed: ${err.message}`);
     }
+  }
+
+  log('err', 'Auto-fetch failed. CORS proxy may be unavailable. Please upload manually.');
+  log('info', `Direct download: https://www.transpordiamet.ee/soidukitega-tehtud-toimingute-statistika`);
+  setProgress(100);
+  btn.disabled = false; btn.textContent = '🔄 Fetch Latest';
+}
+
+// Auto-trigger on page load if today is >= 20th
+window.addEventListener('load', () => {
+  const today = new Date();
+  if (today.getDate() >= 20) {
+    const now = today;
+    let fm = now.getMonth() + 1;
+    let fy = now.getFullYear();
+    // Check if we already have this month
+    const already = db.months.find(m => m.month === fm && m.year === fy);
+    if (!already) {
+      log('info', `Today is the ${today.getDate()}th — auto-checking for latest data…`);
+      // silently try in background
+      setTimeout(triggerAutoFetch, 2000);
+    }
+  }
+  updateSidebarStatus();
+  updateSyncPage();
+  renderOverview();
+});
+
+// ═══════════════════════════════════════════════
+// OVERVIEW PAGE
+// ═══════════════════════════════════════════════
+function renderOverview() {
+  const has = db.months.length > 0;
+  document.getElementById('overviewEmpty').style.display = has ? 'none' : 'block';
+  document.getElementById('overviewDash').style.display = has ? 'block' : 'none';
+  if (!has) return;
+
+  const allRows = db.months.flatMap(m => m.rows);
+  const makeMap = {};
+  allRows.forEach(r => { makeMap[r.make] = (makeMap[r.make]||0) + r.count; });
+  const sortedMakes = Object.entries(makeMap).sort((a,b)=>b[1]-a[1]);
+  const top5 = sortedMakes.slice(0,5).map(([m])=>m);
+  const total = sortedMakes.reduce((s,[,v])=>s+v,0);
+
+  // Stats
+  const statsEl = document.getElementById('overviewStats');
+  const months = db.months;
+  const avgPerMonth = months.length ? Math.round(total/months.length) : 0;
+  statsEl.innerHTML = `
+    <div class="stat-pill"><div class="stat-pill-accent"></div>
+      <div class="stat-pill-label">Total Transactions</div>
+      <div class="stat-pill-value">${total.toLocaleString()}</div>
+      <div class="stat-pill-sub">${months.length} months · järelturg</div>
+    </div>
+    <div class="stat-pill"><div class="stat-pill-accent"></div>
+      <div class="stat-pill-label">Top Make</div>
+      <div class="stat-pill-value" style="font-size:20px">${sortedMakes[0]?.[0]||'—'}</div>
+      <div class="stat-pill-sub">${(sortedMakes[0]?.[1]||0).toLocaleString()} txs · ${((sortedMakes[0]?.[1]||0)*100/total).toFixed(1)}%</div>
+    </div>
+    <div class="stat-pill"><div class="stat-pill-accent"></div>
+      <div class="stat-pill-label">Avg / Month</div>
+      <div class="stat-pill-value">${avgPerMonth.toLocaleString()}</div>
+      <div class="stat-pill-sub">transactions monthly avg</div>
+    </div>
+    <div class="stat-pill"><div class="stat-pill-accent"></div>
+      <div class="stat-pill-label">Unique Makes</div>
+      <div class="stat-pill-value">${Object.keys(makeMap).length}</div>
+      <div class="stat-pill-sub">brands in järelturg</div>
+    </div>`;
+
+  // Line chart: top 5 over months
+  const labels = months.map(m => m.label);
+  destroyChart('chartOverviewLine');
+  const ctx1 = document.getElementById('chartOverviewLine').getContext('2d');
+  charts['chartOverviewLine'] = new Chart(ctx1, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: top5.map((make, i) => ({
+        label: make,
+        data: months.map(m => m.rows.filter(r=>r.make===make).reduce((s,r)=>s+r.count,0)),
+        borderColor: colorFor(make, i),
+        backgroundColor: colorFor(make, i) + '18',
+        fill: false,
+        tension: 0.35,
+        pointBackgroundColor: colorFor(make, i),
+        pointRadius: 4,
+        borderWidth: 2,
+      }))
+    },
+    options: chartOpts({ yLabel: 'Transactions', showLegend: true })
   });
 
-  // Pie (top 10)
-  const pie10 = sorted.slice(0, 10);
-  const otherSum = sorted.slice(10).reduce((s,[,v]) => s+v, 0);
-  mkChart('chartMakePie', {
+  // Donut
+  const pie10 = sortedMakes.slice(0,10);
+  const other = sortedMakes.slice(10).reduce((s,[,v])=>s+v,0);
+  destroyChart('chartOverviewDonut');
+  const ctx2 = document.getElementById('chartOverviewDonut').getContext('2d');
+  charts['chartOverviewDonut'] = new Chart(ctx2, {
     type: 'doughnut',
     data: {
-      labels: [...pie10.map(([k]) => k), otherSum > 0 ? 'Others' : null].filter(Boolean),
-      datasets: [{
-        data: [...pie10.map(([,v]) => v), otherSum > 0 ? otherSum : null].filter(v => v !== null),
-        backgroundColor: [...pie10.map((_,i) => PALETTE[i%PALETTE.length]+'cc'), '#374151'],
-        borderColor: '#111418',
-        borderWidth: 2,
-        hoverOffset: 4,
+      labels: [...pie10.map(([k])=>k), other>0?'Others':null].filter(Boolean),
+      datasets:[{
+        data: [...pie10.map(([,v])=>v), other>0?other:null].filter(v=>v!==null),
+        backgroundColor: [...pie10.map(([m],i)=>colorFor(m,i)+'cc'), '#374151'],
+        borderColor: '#0f1115', borderWidth: 2, hoverOffset: 5,
       }]
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '55%',
+      responsive: true, maintainAspectRatio: false, cutout: '62%',
       plugins: {
-        legend: {
-          position: 'right',
-          labels: { color: '#9ca3af', font: { family: "'JetBrains Mono', monospace", size: 9 }, padding: 8, boxWidth: 10 }
-        },
+        legend: { position:'right', labels:{ color:'#8a95a0', font:{family:"'DM Mono',monospace",size:9}, padding:8, boxWidth:10 }},
         tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.toLocaleString()} (${(ctx.parsed*100/total).toFixed(1)}%)` }}
       }
     }
   });
 
+  // Total monthly bar
+  destroyChart('chartOverviewTotal');
+  const ctx3 = document.getElementById('chartOverviewTotal').getContext('2d');
+  const totals = months.map(m=>m.rows.reduce((s,r)=>s+r.count,0));
+  charts['chartOverviewTotal'] = new Chart(ctx3, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets:[{
+        data: totals,
+        backgroundColor: '#f0c04033',
+        borderColor: '#f0c040',
+        borderWidth: 1, borderRadius: 4,
+      }]
+    },
+    options: chartOpts({ yLabel:'Transactions', showLegend:false })
+  });
+
   // Table
-  const tbody = document.getElementById('makesTableBody');
+  const tbody = document.getElementById('overviewTableBody');
   tbody.innerHTML = '';
-  sorted.forEach(([make, count], i) => {
+  sortedMakes.forEach(([make, count], i) => {
     const pct = (count*100/total).toFixed(1);
-    const maxCount = sorted[0][1];
-    const barPct = Math.round(count*100/maxCount);
-    const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'';
-    tbody.innerHTML += `
-      <tr>
-        <td class="rank-num ${rankClass}">${i+1}</td>
-        <td style="font-weight:600">${make}</td>
-        <td class="count-cell">${count.toLocaleString()}</td>
-        <td class="count-cell" style="color:var(--muted)">${pct}%</td>
-        <td class="bar-cell"><div class="mini-bar"><div class="mini-bar-fill" style="width:${barPct}%"></div></div></td>
-      </tr>`;
+    const bar = Math.round(count*100/sortedMakes[0][1]);
+    const color = colorFor(make, i);
+    tbody.innerHTML += `<tr>
+      <td class="rank">${i+1}</td>
+      <td style="font-weight:600">${make}</td>
+      <td class="num">${count.toLocaleString()}</td>
+      <td class="num" style="color:var(--muted)">${pct}%</td>
+      <td><div class="mbar"><div class="mbar-fill" style="width:${bar}%;background:${color}"></div></div></td>
+    </tr>`;
   });
 }
 
-// ─────────────────────────────────────────────
-// TAB: DEEP DIVE
-// ─────────────────────────────────────────────
-function renderDeepDive() {
-  const make = document.getElementById('deepDiveMake').value;
-  const container = document.getElementById('deepDiveContent');
+// ═══════════════════════════════════════════════
+// COMPARISON PAGE
+// ═══════════════════════════════════════════════
+function renderComparisonPage() {
+  const has = db.months.length > 0;
+  document.getElementById('comparisonEmpty').style.display = has ? 'none' : 'block';
+  document.getElementById('comparisonDash').style.display = has ? 'block' : 'none';
+  if (!has) return;
 
-  if (!make) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">🔍</div>
-        <div class="empty-title">Select a make above</div>
-        <div class="empty-text">Choose a brand to see its monthly trend and top models breakdown</div>
-      </div>`;
+  buildModelSlots();
+  renderComparison();
+}
+
+function allMakes() {
+  const makeMap = {};
+  db.months.flatMap(m=>m.rows).forEach(r=>{ makeMap[r.make]=(makeMap[r.make]||0)+r.count; });
+  return Object.entries(makeMap).sort((a,b)=>b[1]-a[1]).map(([m])=>m);
+}
+
+function modelsForMake(make) {
+  const mm = {};
+  db.months.flatMap(m=>m.rows).filter(r=>r.make===make).forEach(r=>{ mm[r.model]=(mm[r.model]||0)+r.count; });
+  return Object.entries(mm).sort((a,b)=>b[1]-a[1]).map(([m])=>m);
+}
+
+function buildModelSlots() {
+  const makes = allMakes();
+  const grid = document.getElementById('modelPickGrid');
+  grid.innerHTML = '';
+
+  for (let i = 0; i < 5; i++) {
+    const slot = slots[i];
+    const color = COLORS[i];
+    const div = document.createElement('div');
+    div.className = `model-slot${slot?' filled':''}`;
+    div.id = `slot-${i}`;
+
+    // make select
+    const mkSel = document.createElement('select');
+    mkSel.className = 'model-slot-make';
+    mkSel.innerHTML = `<option value="">-- Make --</option>` +
+      makes.map(m=>`<option value="${m}" ${slot?.make===m?'selected':''}>${m}</option>`).join('');
+    mkSel.onchange = () => {
+      slots[i] = mkSel.value ? { make: mkSel.value, model: '' } : null;
+      buildModelSlots();
+    };
+
+    // model select
+    const mdSel = document.createElement('select');
+    mdSel.className = 'model-slot-model';
+    if (slot?.make) {
+      const models = modelsForMake(slot.make);
+      mdSel.innerHTML = `<option value="">-- All models --</option>` +
+        models.map(m=>`<option value="${m}" ${slot?.model===m?'selected':''}>${m||'(unspecified)'}</option>`).join('');
+      mdSel.onchange = () => { if(slots[i]) slots[i].model = mdSel.value; };
+    } else {
+      mdSel.innerHTML = `<option value="">-- Select make first --</option>`;
+      mdSel.disabled = true;
+    }
+
+    const numLabel = document.createElement('div');
+    numLabel.className = 'model-slot-num';
+    numLabel.textContent = `Slot ${i+1}`;
+
+    const colorBar = document.createElement('div');
+    colorBar.className = 'slot-color-bar';
+    colorBar.style.background = slot ? color : 'var(--border)';
+
+    if (slot) {
+      const clr = document.createElement('span');
+      clr.className = 'slot-clear';
+      clr.textContent = '×';
+      clr.onclick = () => { slots[i]=null; buildModelSlots(); };
+      div.appendChild(clr);
+    }
+
+    div.appendChild(numLabel);
+    div.appendChild(mkSel);
+    div.appendChild(mdSel);
+    div.appendChild(colorBar);
+    grid.appendChild(div);
+  }
+}
+
+function renderComparison() {
+  const activeSlots = slots.map((s,i)=>({...s,idx:i})).filter(s=>s&&s.make);
+  const cmpArea = document.getElementById('comparisonCharts');
+
+  if (activeSlots.length === 0) {
+    cmpArea.style.display = 'none';
     return;
   }
+  cmpArea.style.display = 'block';
 
-  container.innerHTML = `
-    <div class="chart-grid">
-      <div class="chart-card full">
-        <div class="chart-title">${make} — Monthly Volume Trend</div>
-        <div class="chart-desc">REGISTRATIONS PER MONTH</div>
-        <div class="chart-wrap"><canvas id="chartDdTrend"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">${make} — Top Models</div>
-        <div class="chart-desc">ALL LOADED MONTHS COMBINED</div>
-        <div class="chart-wrap tall"><canvas id="chartDdModels"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">${make} — Market Share Over Time</div>
-        <div class="chart-desc">% OF TOTAL MONTHLY REGISTRATIONS</div>
-        <div class="chart-wrap"><canvas id="chartDdShare"></canvas></div>
-      </div>
-    </div>`;
+  const months = db.months;
+  const labels = months.map(m=>m.label);
 
-  // Trend
-  const labels = allData.map(d => d.label);
-  const trendData = allData.map(d => d.rows.filter(r => r.make===make).reduce((s,r)=>s+r.count,0));
-  const totalPerMonth = allData.map(d => d.rows.reduce((s,r)=>s+r.count,0));
-  const shareData = trendData.map((v,i) => totalPerMonth[i]>0 ? parseFloat((v*100/totalPerMonth[i]).toFixed(2)) : 0);
+  function getRows(slot) {
+    return months.flatMap(m=>
+      m.rows.filter(r =>
+        r.make === slot.make &&
+        (!slot.model || r.model === slot.model)
+      ).map(r => ({...r, monthLabel: m.label, year: m.year, month: m.month}))
+    );
+  }
 
-  mkChart('chartDdTrend', {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: make,
-        data: trendData,
-        borderColor: '#e8c547',
-        backgroundColor: 'rgba(232,197,71,0.1)',
-        fill: true,
-        tension: 0.3,
-        pointBackgroundColor: '#e8c547',
-        pointRadius: 5,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: gridStyle, ticks: tickStyle },
-        y: { grid: gridStyle, ticks: { ...tickStyle, callback: v => v.toLocaleString() } }
-      }
+  function slotLabel(slot) {
+    return slot.model ? `${slot.make} ${slot.model}` : slot.make;
+  }
+
+  // ── Line chart: monthly volume
+  destroyChart('chartCmpTrend');
+  charts['chartCmpTrend'] = new Chart(
+    document.getElementById('chartCmpTrend').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: activeSlots.map(s => {
+          const color = COLORS[s.idx];
+          return {
+            label: slotLabel(s),
+            data: months.map(m =>
+              m.rows.filter(r=>r.make===s.make&&(!s.model||r.model===s.model))
+                    .reduce((sum,r)=>sum+r.count,0)
+            ),
+            borderColor: color,
+            backgroundColor: color+'18',
+            fill: false,
+            tension: 0.3,
+            pointBackgroundColor: color,
+            pointRadius: 5,
+            borderWidth: 2,
+          };
+        })
+      },
+      options: chartOpts({ yLabel:'Transactions', showLegend:true })
     }
+  );
+
+  // ── By production year: grouped bar
+  const allProdYears = new Set();
+  activeSlots.forEach(s => {
+    getRows(s).forEach(r => { if(r.prodYear) allProdYears.add(r.prodYear); });
+  });
+  const sortedYears = [...allProdYears].sort();
+
+  destroyChart('chartCmpByYear');
+  charts['chartCmpByYear'] = new Chart(
+    document.getElementById('chartCmpByYear').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: sortedYears,
+        datasets: activeSlots.map(s => {
+          const color = COLORS[s.idx];
+          const yearMap = {};
+          getRows(s).forEach(r => { if(r.prodYear) yearMap[r.prodYear]=(yearMap[r.prodYear]||0)+r.count; });
+          return {
+            label: slotLabel(s),
+            data: sortedYears.map(y=>yearMap[y]||0),
+            backgroundColor: color+'99',
+            borderColor: color,
+            borderWidth: 1,
+            borderRadius: 3,
+          };
+        })
+      },
+      options: chartOpts({ yLabel:'Transactions', showLegend:true, barMode: true })
+    }
+  );
+
+  // ── Summary cards
+  const cardContainer = document.getElementById('cmpSummaryCards');
+  cardContainer.innerHTML = '';
+  cardContainer.style.gridTemplateColumns = `repeat(${activeSlots.length},1fr)`;
+
+  activeSlots.forEach(s => {
+    const rows = getRows(s);
+    const totalTx = rows.reduce((sum,r)=>sum+r.count,0);
+    const color = COLORS[s.idx];
+    cardContainer.innerHTML += `
+      <div class="card" style="border-top:3px solid ${color};padding:16px">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:6px;letter-spacing:0.1em">SLOT ${s.idx+1}</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:${color}">${slotLabel(s)}</div>
+        <div style="font-size:22px;font-weight:700">${totalTx.toLocaleString()}</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px">total transactions</div>
+      </div>`;
   });
 
-  // Models
-  const modelMap = {};
-  allData.forEach(d => {
-    d.rows.filter(r => r.make===make && r.model).forEach(r => {
-      modelMap[r.model] = (modelMap[r.model]||0) + r.count;
-    });
-  });
-  const modelsSorted = Object.entries(modelMap).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  // ── Transaction table
+  const txTbody = document.getElementById('cmpTxTableBody');
+  txTbody.innerHTML = '';
+  const maxTotal = Math.max(...activeSlots.map(s => getRows(s).reduce((sum,r)=>sum+r.count,0)));
 
-  mkChart('chartDdModels', {
-    type: 'bar',
-    indexAxis: 'y',
-    data: {
-      labels: modelsSorted.map(([k]) => k || '(unknown)'),
-      datasets: [{
-        data: modelsSorted.map(([,v]) => v),
-        backgroundColor: modelsSorted.map((_,i) => PALETTE[i%PALETTE.length]+'bb'),
-        borderColor: modelsSorted.map((_,i) => PALETTE[i%PALETTE.length]),
-        borderWidth: 1,
-        borderRadius: 3,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: gridStyle, ticks: { ...tickStyle, callback: v => v.toLocaleString() } },
-        y: { grid: { display: false }, ticks: tickStyle }
-      }
-    }
+  activeSlots.forEach(s => {
+    const rows = getRows(s);
+    const color = COLORS[s.idx];
+    const total = rows.reduce((sum,r)=>sum+r.count,0);
+    const avgPerMo = months.length ? (total/months.length).toFixed(1) : '—';
+    // peak month
+    const byMonth = {};
+    rows.forEach(r => { byMonth[r.monthLabel]=(byMonth[r.monthLabel]||0)+r.count; });
+    const peak = Object.entries(byMonth).sort((a,b)=>b[1]-a[1])[0];
+    const bar = Math.round(total*100/maxTotal);
+
+    txTbody.innerHTML += `<tr>
+      <td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${color};margin-right:7px;vertical-align:middle"></span><b>${slotLabel(s)}</b></td>
+      <td class="num"><b>${total.toLocaleString()}</b></td>
+      <td class="num">${avgPerMo}</td>
+      <td class="num" style="color:var(--muted)">${peak?.[0]||'—'}</td>
+      <td class="num">${peak?.[1]?.toLocaleString()||'—'}</td>
+      <td><div class="mbar" style="width:100px"><div class="mbar-fill" style="width:${bar}%;background:${color}"></div></div></td>
+    </tr>`;
   });
 
-  // Share
-  mkChart('chartDdShare', {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Market Share %',
-        data: shareData,
-        borderColor: '#4f9cf9',
-        backgroundColor: 'rgba(79,156,249,0.1)',
-        fill: true,
-        tension: 0.3,
-        pointBackgroundColor: '#4f9cf9',
-        pointRadius: 5,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: gridStyle, ticks: tickStyle },
-        y: { grid: gridStyle, ticks: { ...tickStyle, callback: v => v+'%' } }
-      }
-    }
+  // ── By-year table
+  const thead = document.getElementById('cmpYearTableHead');
+  thead.innerHTML = '<th>Prod. Year</th>' +
+    activeSlots.map(s=>`<th class="num" style="color:${COLORS[s.idx]}">${slotLabel(s)}</th>`).join('');
+
+  const yearBody = document.getElementById('cmpYearTableBody');
+  yearBody.innerHTML = '';
+  sortedYears.forEach(yr => {
+    const cells = activeSlots.map(s => {
+      const rows = getRows(s);
+      const val = rows.filter(r=>r.prodYear===yr).reduce((sum,r)=>sum+r.count,0);
+      return `<td class="num">${val>0?val.toLocaleString():'—'}</td>`;
+    }).join('');
+    yearBody.innerHTML += `<tr><td style="font-family:var(--mono)">${yr}</td>${cells}</tr>`;
   });
 }
 
-// ─────────────────────────────────────────────
-// TAB SWITCHING
-// ─────────────────────────────────────────────
-function switchTab(id) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelector(`[onclick="switchTab('${id}')"]`).classList.add('active');
-  document.getElementById(`tab-${id}`).classList.add('active');
+// ═══════════════════════════════════════════════
+// CHART HELPERS
+// ═══════════════════════════════════════════════
+const gridColor = 'rgba(255,255,255,0.04)';
+const tickFont = { family:"'DM Mono',monospace", size:10 };
+const tickColor = '#5a6370';
+
+function chartOpts({ yLabel='', showLegend=false, barMode=false }) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: showLegend ? {
+        labels: { color: tickColor, font: tickFont, padding: 14, boxWidth: 12 }
+      } : { display: false },
+      tooltip: { backgroundColor:'#1d2228', borderColor:'#2e3740', borderWidth:1,
+        titleColor:'#dde2e8', bodyColor:'#8a95a0',
+        callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y?.toLocaleString()}` }
+      }
+    },
+    scales: {
+      x: { grid:{ color:gridColor }, ticks:{ color:tickColor, font:tickFont } },
+      y: { grid:{ color:gridColor }, ticks:{ color:tickColor, font:tickFont, callback: v=>v.toLocaleString() },
+           title: yLabel ? { display:true, text:yLabel, color:tickColor, font:tickFont } : { display:false } }
+    }
+  };
 }
 
-// ─────────────────────────────────────────────
-// FILE CHIPS
-// ─────────────────────────────────────────────
-function addFileChip(filename, label) {
-  const container = document.getElementById('filesLoaded');
-  const id = `chip-${label.replace(' ','-')}`;
-  // remove old chip with same label
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+// ═══════════════════════════════════════════════
+// SYNC PAGE & STATUS
+// ═══════════════════════════════════════════════
+function updateSidebarStatus() {
+  const dot = document.getElementById('syncDot');
+  const txt = document.getElementById('syncStatusText');
+  const cnt = document.getElementById('syncMonthCount');
+  const n = db.months.length;
+  if (n === 0) { dot.className='sync-dot'; txt.textContent='No data'; }
+  else { dot.className='sync-dot ok'; txt.textContent='Data loaded'; }
+  cnt.textContent = `${n} month${n!==1?'s':''} loaded`;
+}
+
+function updateSyncPage() {
+  document.getElementById('loadedCount').textContent = `${db.months.length} FILES`;
+  const list = document.getElementById('loadedMonthsList');
+  if (db.months.length === 0) {
+    list.innerHTML = '<div class="empty" style="padding:32px"><div class="empty-text">No months loaded yet</div></div>';
+    return;
+  }
+  list.innerHTML = `<table class="data-table">
+    <thead><tr><th>Month</th><th class="num">Rows</th><th class="num">Total Tx</th><th>Sheet Used</th><th></th></tr></thead>
+    <tbody>${db.months.map(m=>`<tr>
+      <td style="font-weight:600">${m.label}</td>
+      <td class="num">${m.rows.length.toLocaleString()}</td>
+      <td class="num">${m.rows.reduce((s,r)=>s+r.count,0).toLocaleString()}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">${m.sheetUsed||'—'}</td>
+      <td><button class="btn" style="padding:4px 10px;font-size:11px" onclick="removeMonth(${m.year},${m.month})">Remove</button></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function removeMonth(year, month) {
+  db.months = db.months.filter(m=>!(m.year===year&&m.month===month));
+  saveDB();
+  updateSidebarStatus();
+  updateSyncPage();
+  renderOverview();
+}
+
+function addChip(filename, label) {
+  const c = document.getElementById('fileChips');
+  const id = `chip-${label.replace(/\s/g,'-')}`;
   document.getElementById(id)?.remove();
-  const chip = document.createElement('div');
-  chip.className = 'file-chip';
-  chip.id = id;
-  chip.innerHTML = `<span class="month-badge">${label}</span><span>${filename.length > 30 ? filename.slice(0,28)+'…' : filename}</span><span class="remove-btn" onclick="removeMonth('${label}')">×</span>`;
-  container.appendChild(chip);
+  const div = document.createElement('div');
+  div.className='chip'; div.id=id;
+  div.innerHTML=`<span class="chip-label">${label}</span><span style="color:var(--muted2)">${filename.length>30?filename.slice(0,28)+'…':filename}</span><span class="chip-remove" onclick="removeChip('${label}','${id}')">×</span>`;
+  c.appendChild(div);
 }
 
-function removeMonth(label) {
-  allData = allData.filter(d => d.label !== label);
-  document.getElementById(`chip-${label.replace(' ','-')}`)?.remove();
-  updateUI();
+function removeChip(label, id) {
+  document.getElementById(id)?.remove();
 }
 
-// ─────────────────────────────────────────────
-// LOADING
-// ─────────────────────────────────────────────
-function setLoading(on) {
-  const bar = document.getElementById('loadingBar');
-  bar.style.width = on ? '60%' : '100%';
-  if (!on) setTimeout(() => { bar.style.width = '0%'; }, 400);
+// ═══════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════
+function setProgress(pct) {
+  const bar = document.getElementById('progressBar');
+  bar.style.width = pct + '%';
+  bar.style.opacity = '1';
+  if (pct >= 100) setTimeout(() => { bar.style.opacity='0'; bar.style.width='0%'; }, 500);
 }
+
+function log(type, msg) {
+  const el = document.getElementById('fetchLog');
+  const icons = { ok:'✓', err:'✗', info:'ℹ', warn:'⚠' };
+  const now = new Date().toLocaleTimeString();
+  el.innerHTML += `<span class="log-${type}">${icons[type]}</span> [${now}] ${msg}<br>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+// Init from persisted data
+updateSidebarStatus();
+updateSyncPage();
 </script>
 </body>
 </html>
