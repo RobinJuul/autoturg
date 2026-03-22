@@ -9,23 +9,23 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap');
 
 :root {
-  --bg: #07080a;
-  --s1: #0f1115;
-  --s2: #161a1f;
-  --s3: #1d2228;
-  --border: #252b33;
-  --border2: #2e3740;
-  --gold: #f0c040;
-  --gold2: rgba(240,192,64,0.12);
-  --blue: #5b9cf6;
-  --green: #4eca8b;
-  --red: #f06060;
-  --purple: #a78bfa;
-  --orange: #fb923c;
-  --teal: #2dd4bf;
-  --text: #dde2e8;
-  --muted: #5a6370;
-  --muted2: #8a95a0;
+  --bg: #f0f2f5;
+  --s1: #ffffff;
+  --s2: #f8f9fb;
+  --s3: #eef0f4;
+  --border: #dde1e8;
+  --border2: #cdd3dc;
+  --gold: #c8960a;
+  --gold2: rgba(200,150,10,0.08);
+  --blue: #2563eb;
+  --green: #16a34a;
+  --red: #dc2626;
+  --purple: #7c3aed;
+  --orange: #ea580c;
+  --teal: #0d9488;
+  --text: #1a1f2e;
+  --muted: #6b7280;
+  --muted2: #4b5563;
   --radius: 10px;
   --font: 'DM Sans', sans-serif;
   --mono: 'DM Mono', monospace;
@@ -194,8 +194,8 @@ body {
   transition: all 0.15s;
 }
 .btn:hover { border-color: var(--gold); color: var(--gold); }
-.btn.primary { background: var(--gold); color: #000; border-color: var(--gold); }
-.btn.primary:hover { background: #ffd060; border-color: #ffd060; color: #000; }
+.btn.primary { background: var(--gold); color: #fff; border-color: var(--gold); }
+.btn.primary:hover { background: #b08508; border-color: #b08508; color: #fff; }
 
 .timeline-select {
   background: var(--s2);
@@ -366,7 +366,7 @@ body {
 }
 .chip-label {
   background: var(--gold);
-  color: #000;
+  color: #fff;
   font-weight: 700;
   border-radius: 3px;
   padding: 1px 5px;
@@ -864,12 +864,12 @@ let charts = {};
 // Comparison slots: up to 5 {make, model}
 let slots = [null, null, null, null, null];
 
-const COLORS = ['#f0c040','#5b9cf6','#4eca8b','#f06060','#a78bfa'];
+const COLORS = ['#c8960a','#2563eb','#16a34a','#dc2626','#7c3aed'];
 const MAKE_COLORS = {
-  'VOLKSWAGEN':'#5b9cf6','TOYOTA':'#f06060','BMW':'#4eca8b','MERCEDES-BENZ':'#a78bfa',
-  'AUDI':'#fb923c','VOLVO':'#2dd4bf','SKODA':'#f0c040','FORD':'#e879f9',
-  'HONDA':'#f87171','HYUNDAI':'#34d399','KIA':'#fbbf24','NISSAN':'#818cf8',
-  'MAZDA':'#6ee7b7','RENAULT':'#fca5a5','OPEL':'#67e8f9',
+  'VOLKSWAGEN':'#2563eb','TOYOTA':'#dc2626','BMW':'#16a34a','MERCEDES-BENZ':'#7c3aed',
+  'AUDI':'#ea580c','VOLVO':'#0d9488','SKODA':'#c8960a','FORD':'#c026d3',
+  'HONDA':'#e11d48','HYUNDAI':'#059669','KIA':'#d97706','NISSAN':'#4f46e5',
+  'MAZDA':'#10b981','RENAULT':'#f43f5e','OPEL':'#0891b2',
 };
 
 function colorFor(make, idx) {
@@ -1069,14 +1069,14 @@ function renderOverview() {
       labels: [...pie10.map(([k])=>k), other>0?'Others':null].filter(Boolean),
       datasets:[{
         data: [...pie10.map(([,v])=>v), other>0?other:null].filter(v=>v!==null),
-        backgroundColor: [...pie10.map(([m],i)=>colorFor(m,i)+'cc'), '#374151'],
-        borderColor: '#0f1115', borderWidth: 2, hoverOffset: 5,
+        backgroundColor: [...pie10.map(([m],i)=>colorFor(m,i)+'cc'), '#d1d5db'],
+        borderColor: '#ffffff', borderWidth: 2, hoverOffset: 5,
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false, cutout: '62%',
       plugins: {
-        legend: { position:'right', labels:{ color:'#8a95a0', font:{family:"'DM Mono',monospace",size:9}, padding:8, boxWidth:10 }},
+        legend: { position:'right', labels:{ color:'#6b7280', font:{family:"'DM Mono',monospace",size:9}, padding:8, boxWidth:10 }},
         tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.toLocaleString()} (${(ctx.parsed*100/total).toFixed(1)}%)` }}
       }
     }
@@ -1092,8 +1092,8 @@ function renderOverview() {
       labels,
       datasets:[{
         data: totals,
-        backgroundColor: '#f0c04033',
-        borderColor: '#f0c040',
+        backgroundColor: 'rgba(200,150,10,0.15)',
+        borderColor: '#c8960a',
         borderWidth: 1, borderRadius: 4,
       }]
     },
@@ -1482,9 +1482,9 @@ function renderComparison() {
 // ═══════════════════════════════════════════════
 // CHART HELPERS
 // ═══════════════════════════════════════════════
-const gridColor = 'rgba(255,255,255,0.04)';
+const gridColor = 'rgba(0,0,0,0.06)';
 const tickFont = { family:"'DM Mono',monospace", size:10 };
-const tickColor = '#5a6370';
+const tickColor = '#6b7280';
 
 function chartOpts({ yLabel='', showLegend=false, barMode=false }) {
   return {
@@ -1495,8 +1495,8 @@ function chartOpts({ yLabel='', showLegend=false, barMode=false }) {
       legend: showLegend ? {
         labels: { color: tickColor, font: tickFont, padding: 14, boxWidth: 12 }
       } : { display: false },
-      tooltip: { backgroundColor:'#1d2228', borderColor:'#2e3740', borderWidth:1,
-        titleColor:'#dde2e8', bodyColor:'#8a95a0',
+      tooltip: { backgroundColor:'#ffffff', borderColor:'#dde1e8', borderWidth:1,
+        titleColor:'#1a1f2e', bodyColor:'#4b5563',
         callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y?.toLocaleString()}` }
       }
     },
