@@ -84,9 +84,8 @@ def parse_sheet(ws) -> list:
             header_row = ri
             make_col = mk_idx
             model_col = next((i for i, c in enumerate(cells) if i != mk_idx and (c in ('mudel', 'model') or 'mudel' in c)), None)
-            if model_col is None:
-                model_col = mk_idx + 1
-            prod_col = next((i for i, c in enumerate(cells) if 'aasta' in c or c == 'year' or 'tootmis' in c), None)
+            # Don't guess model_col — leave None if not found (old format has no model column)
+            prod_col = next((i for i, c in enumerate(cells) if 'aasta' in c or c == 'year' or 'tootmis' in c or 'esm reg' in c), None)
             count_col = next((i for i, c in enumerate(cells) if c in ('arv', 'kokku', 'hulk', 'transactions') or 'count' in c), None)
             if count_col is None:
                 count_col = len(cells) - 1
@@ -101,7 +100,9 @@ def parse_sheet(ws) -> list:
         if not make or make in SKIP_MAKES:
             continue
 
-        full_model = str(vals[model_col] or '').strip().upper() if model_col is not None and model_col < len(vals) else ''
+        full_model = ''
+        if model_col is not None and model_col < len(vals):
+            full_model = str(vals[model_col] or '').strip().upper()
 
         parts = full_model.split(None, 1)
         model = parts[0] if parts else ''
@@ -110,7 +111,7 @@ def parse_sheet(ws) -> list:
         prod_year = None
         if prod_col is not None and prod_col < len(vals):
             try:
-                py = int(vals[prod_col])
+                py = int(float(vals[prod_col]))
                 if 1950 <= py <= date.today().year + 1:
                     prod_year = py
             except (ValueError, TypeError):
@@ -119,17 +120,9 @@ def parse_sheet(ws) -> list:
         count = 0
         if count_col is not None and count_col < len(vals):
             try:
-                count = int(str(vals[count_col] or '0').replace(' ', '').replace(',', ''))
+                count = int(float(str(vals[count_col] or '0').replace(' ', '').replace(',', '')))
             except (ValueError, TypeError):
                 pass
-
-        if count <= 0:
-            start = max(make_col, model_col or 0, prod_col or 0) + 1
-            for j in range(start, len(vals)):
-                try:
-                    count += int(str(vals[j] or '0').replace(' ', '').replace(',', ''))
-                except (ValueError, TypeError):
-                    pass
 
         if count > 0:
             rows_out.append({
