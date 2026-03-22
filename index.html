@@ -196,6 +196,18 @@ body {
 .btn:hover { border-color: var(--gold); color: var(--gold); }
 .btn.primary { background: var(--gold); color: #000; border-color: var(--gold); }
 .btn.primary:hover { background: #ffd060; border-color: #ffd060; color: #000; }
+
+.timeline-select {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.timeline-select:focus { outline: none; border-color: var(--gold); }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .content { padding: 32px; }
@@ -622,6 +634,14 @@ body {
       </div>
     </div>
 
+    <div class="timeline-bar" id="timelineBar" style="display:none;padding:10px 28px;background:var(--s1);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <span style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:0.1em;margin-right:4px">TIMELINE</span>
+      <select id="timelineFrom" class="timeline-select" onchange="applyTimeline()"></select>
+      <span style="color:var(--muted);font-size:12px">→</span>
+      <select id="timelineTo" class="timeline-select" onchange="applyTimeline()"></select>
+      <button class="btn" style="padding:4px 12px;font-size:11px" onclick="resetTimeline()">All</button>
+    </div>
+
     <div class="content">
 
       <!-- ══════════ PAGE: OVERVIEW ══════════ -->
@@ -807,6 +827,74 @@ function colorFor(make, idx) {
   return MAKE_COLORS[make] || COLORS[idx % COLORS.length];
 }
 
+// ═══════════════════════════════════════════════
+// TIMELINE FILTER
+// ═══════════════════════════════════════════════
+let timelineFrom = null; // {year, month} or null = earliest
+let timelineTo = null;   // {year, month} or null = latest
+
+function monthKey(m) { return m.year * 100 + m.month; }
+
+function filteredMonths() {
+  let months = db.months;
+  if (timelineFrom) months = months.filter(m => monthKey(m) >= monthKey(timelineFrom));
+  if (timelineTo) months = months.filter(m => monthKey(m) <= monthKey(timelineTo));
+  return months;
+}
+
+function buildTimelineSelects() {
+  const bar = document.getElementById('timelineBar');
+  if (db.months.length === 0) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+
+  const fromSel = document.getElementById('timelineFrom');
+  const toSel = document.getElementById('timelineTo');
+  const sorted = [...db.months].sort((a,b) => monthKey(a) - monthKey(b));
+
+  const opts = sorted.map(m => `<option value="${m.year}-${m.month}">${m.label}</option>`).join('');
+  fromSel.innerHTML = opts;
+  toSel.innerHTML = opts;
+
+  // Set defaults
+  fromSel.value = `${sorted[0].year}-${sorted[0].month}`;
+  toSel.value = `${sorted[sorted.length-1].year}-${sorted[sorted.length-1].month}`;
+
+  if (timelineFrom) fromSel.value = `${timelineFrom.year}-${timelineFrom.month}`;
+  if (timelineTo) toSel.value = `${timelineTo.year}-${timelineTo.month}`;
+}
+
+function applyTimeline() {
+  const fromVal = document.getElementById('timelineFrom').value.split('-').map(Number);
+  const toVal = document.getElementById('timelineTo').value.split('-').map(Number);
+  timelineFrom = { year: fromVal[0], month: fromVal[1] };
+  timelineTo = { year: toVal[0], month: toVal[1] };
+
+  // Ensure from <= to
+  if (monthKey(timelineFrom) > monthKey(timelineTo)) {
+    [timelineFrom, timelineTo] = [timelineTo, timelineFrom];
+    document.getElementById('timelineFrom').value = `${timelineFrom.year}-${timelineFrom.month}`;
+    document.getElementById('timelineTo').value = `${timelineTo.year}-${timelineTo.month}`;
+  }
+
+  renderCurrentPage();
+}
+
+function resetTimeline() {
+  timelineFrom = null;
+  timelineTo = null;
+  const sorted = [...db.months].sort((a,b) => monthKey(a) - monthKey(b));
+  if (sorted.length) {
+    document.getElementById('timelineFrom').value = `${sorted[0].year}-${sorted[0].month}`;
+    document.getElementById('timelineTo').value = `${sorted[sorted.length-1].year}-${sorted[sorted.length-1].month}`;
+  }
+  renderCurrentPage();
+}
+
+function renderCurrentPage() {
+  const active = document.querySelector('.page.active');
+  if (active?.id === 'page-overview') renderOverview();
+  else if (active?.id === 'page-comparison') renderComparisonPage();
+}
 
 // ═══════════════════════════════════════════════
 // NAVIGATION
@@ -844,6 +932,7 @@ async function fetchData() {
     db.months = data.months || [];
     db.months.sort((a,b) => a.year*100+a.month - (b.year*100+b.month));
     setProgress(100);
+    buildTimelineSelects();
     updateSidebarStatus();
     updateSyncPage();
     renderOverview();
@@ -859,12 +948,13 @@ window.addEventListener('load', fetchData);
 // OVERVIEW PAGE
 // ═══════════════════════════════════════════════
 function renderOverview() {
-  const has = db.months.length > 0;
+  const months = filteredMonths();
+  const has = months.length > 0;
   document.getElementById('overviewEmpty').style.display = has ? 'none' : 'block';
   document.getElementById('overviewDash').style.display = has ? 'block' : 'none';
   if (!has) return;
 
-  const allRows = db.months.flatMap(m => m.rows);
+  const allRows = months.flatMap(m => m.rows);
   const makeMap = {};
   allRows.forEach(r => { makeMap[r.make] = (makeMap[r.make]||0) + r.count; });
   const sortedMakes = Object.entries(makeMap).sort((a,b)=>b[1]-a[1]);
@@ -873,7 +963,6 @@ function renderOverview() {
 
   // Stats
   const statsEl = document.getElementById('overviewStats');
-  const months = db.months;
   const avgPerMonth = months.length ? Math.round(total/months.length) : 0;
   statsEl.innerHTML = `
     <div class="stat-pill"><div class="stat-pill-accent"></div>
@@ -964,26 +1053,26 @@ function renderOverview() {
 
   // Table
   const tbody = document.getElementById('overviewTableBody');
-  tbody.innerHTML = '';
-  sortedMakes.forEach(([make, count], i) => {
+  const tableHtml = sortedMakes.map(([make, count], i) => {
     const pct = (count*100/total).toFixed(1);
     const bar = Math.round(count*100/sortedMakes[0][1]);
     const color = colorFor(make, i);
-    tbody.innerHTML += `<tr>
+    return `<tr>
       <td class="rank">${i+1}</td>
       <td style="font-weight:600">${make}</td>
       <td class="num">${count.toLocaleString()}</td>
       <td class="num" style="color:var(--muted)">${pct}%</td>
       <td><div class="mbar"><div class="mbar-fill" style="width:${bar}%;background:${color}"></div></div></td>
     </tr>`;
-  });
+  }).join('');
+  tbody.innerHTML = tableHtml;
 }
 
 // ═══════════════════════════════════════════════
 // COMPARISON PAGE
 // ═══════════════════════════════════════════════
 function renderComparisonPage() {
-  const has = db.months.length > 0;
+  const has = filteredMonths().length > 0;
   document.getElementById('comparisonEmpty').style.display = has ? 'none' : 'block';
   document.getElementById('comparisonDash').style.display = has ? 'block' : 'none';
   if (!has) return;
@@ -994,13 +1083,13 @@ function renderComparisonPage() {
 
 function allMakes() {
   const makeMap = {};
-  db.months.flatMap(m=>m.rows).forEach(r=>{ makeMap[r.make]=(makeMap[r.make]||0)+r.count; });
+  filteredMonths().flatMap(m=>m.rows).forEach(r=>{ makeMap[r.make]=(makeMap[r.make]||0)+r.count; });
   return Object.entries(makeMap).sort((a,b)=>b[1]-a[1]).map(([m])=>m);
 }
 
 function modelsForMake(make) {
   const mm = {};
-  db.months.flatMap(m=>m.rows).filter(r=>r.make===make).forEach(r=>{ mm[r.model]=(mm[r.model]||0)+r.count; });
+  filteredMonths().flatMap(m=>m.rows).filter(r=>r.make===make).forEach(r=>{ mm[r.model]=(mm[r.model]||0)+r.count; });
   return Object.entries(mm).sort((a,b)=>b[1]-a[1]).map(([m])=>m);
 }
 
@@ -1073,7 +1162,7 @@ function renderComparison() {
   }
   cmpArea.style.display = 'block';
 
-  const months = db.months;
+  const months = filteredMonths();
   const labels = months.map(m=>m.label);
 
   function getRows(slot) {
