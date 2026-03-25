@@ -17,6 +17,12 @@ MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','
 BASE_URL = "https://www.transpordiamet.ee/sites/default/files/documents"
 DATA_FILE = Path(__file__).resolve().parent / "data.json"
 
+# Open Data API (avaandmed.eesti.ee) — optional, requires API key
+# Register at avaandmed.eesti.ee to get a key, then set env var OPENDATA_API_KEY
+# API docs: https://avaandmed.eesti.ee/api/v1/
+OPENDATA_BASE = "https://avaandmed.eesti.ee/api/v1"
+OPENDATA_API_KEY = os.environ.get("OPENDATA_API_KEY", "")
+
 SKIP_MAKES = {'KOKKU', 'TOTAL', 'ZUSAMMEN', 'SUM', 'MARK', 'MÄRK'}
 
 # Sheet detection keywords per category
@@ -25,6 +31,47 @@ SHEET_KEYWORDS = {
     'newCars':   ('esmane', 'esmased', 'uued', 'uus', 'new', 'first registration', 'esmas'),
     'imports':   ('import', 'sisseveo', 'sissetoo'),
 }
+
+
+def try_opendata_api(data_month: int, data_year: int) -> bytes:
+    """Try to download infoleht via avaandmed.eesti.ee Open Data API.
+    Returns file bytes or None if API is unavailable/unconfigured."""
+    if not OPENDATA_API_KEY:
+        return None
+
+    try:
+        # Search for infoleht dataset
+        search_url = f"{OPENDATA_BASE}/datasets/search?q=infoleht&apiKey={OPENDATA_API_KEY}"
+        req = Request(search_url, headers={"User-Agent": "Mozilla/5.0 (autoturg-bot)"})
+        with urlopen(req, timeout=30) as resp:
+            results = json.loads(resp.read().decode())
+
+        # Find the correct dataset
+        dataset_id = None
+        for ds in results.get('data', results if isinstance(results, list) else []):
+            name = (ds.get('name', '') or ds.get('title', '')).lower()
+            if 'infoleht' in name:
+                dataset_id = ds.get('id') or ds.get('datasetId')
+                break
+
+        if not dataset_id:
+            print("  OpenData API: infoleht dataset not found")
+            return None
+
+        # Download the dataset
+        dl_url = f"{OPENDATA_BASE}/datasets/{dataset_id}/download?format=xlsx&apiKey={OPENDATA_API_KEY}"
+        req = Request(dl_url, headers={"User-Agent": "Mozilla/5.0 (autoturg-bot)"})
+        with urlopen(req, timeout=60) as resp:
+            data = resp.read()
+
+        if len(data) > 1000:
+            print(f"  OpenData API: downloaded {len(data)} bytes")
+            return data
+
+    except Exception as e:
+        print(f"  OpenData API failed: {e}")
+
+    return None
 
 
 def candidate_urls(data_month: int, data_year: int) -> list:
@@ -231,27 +278,33 @@ def open_workbook(tmp_path, is_xls: bool):
 def fetch_month(month: int, year: int) -> bool:
     """Try to fetch and parse a single month (all 3 categories). Returns True if any category succeeded."""
     print(f"Fetching infoleht for {MONTHS_EN[month-1]} {year}...")
-    urls = candidate_urls(month, year)
 
-    raw = None
-    used_url = None
-    for url in urls:
-        try:
-            raw = download(url)
-            if len(raw) < 1000:
-                raw = None
+    # Try Open Data API first (if configured)
+    raw = try_opendata_api(month, year)
+    used_url = 'opendata-api'
+    is_xls = False
+
+    # Fall back to URL-guessing
+    if raw is None:
+        urls = candidate_urls(month, year)
+        used_url = None
+        for url in urls:
+            try:
+                raw = download(url)
+                if len(raw) < 1000:
+                    raw = None
+                    continue
+                used_url = url
+                print(f"  Downloaded: {url}")
+                break
+            except (URLError, HTTPError):
                 continue
-            used_url = url
-            print(f"  Downloaded: {url}")
-            break
-        except (URLError, HTTPError):
-            continue
 
     if raw is None:
         print(f"  No file found for {MONTHS_EN[month-1]} {year}")
         return False
 
-    is_xls = used_url.endswith('.xls')
+    is_xls = used_url and used_url.endswith('.xls') and not used_url.endswith('.xlsx')
     tmp = DATA_FILE.parent / f"_tmp_infoleht{'.xls' if is_xls else '.xlsx'}"
     tmp.write_bytes(raw)
 
