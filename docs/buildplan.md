@@ -26,36 +26,47 @@ gantt
     UI: category tabs & navigation      :done, p1d, 2026-03-24, 1d
     Combined cross-category overview    :done, p1e, 2026-03-24, 1d
 
-    section Phase 2: API Integration & Data Pipeline
-    andmed.eesti.ee API integration     :p2a, 2026-03-26, 7d
-    Statistikaamet API (TS322)          :p2b, after p2a, 5d
-    Replace URL-guessing with API fetch :p2c, after p2a, 3d
-    VIN decode logic (client-side)      :p2d, after p2a, 5d
-    mntstat.ee vehicle scraper          :p2e, after p2d, 7d
-    Vehicle detail panel UI             :p2f, after p2d, 7d
-    Input UI: VIN / reg / selector      :p2g, after p2f, 5d
-    Apply for AVP access                :crit, p2h, 2026-03-26, 21d
-    Milestone: API + lookup live        :milestone, p2m, after p2g, 0d
+    section Sprint 2: API & VIN Foundation
+    andmed.eesti.ee OpenData API        :active, s2a, 2026-03-25, 7d
+    VIN decode (client-side)            :active, s2b, 2026-03-25, 5d
+    mntstat.ee vehicle scraper          :active, s2c, 2026-03-25, 7d
+    Vehicle detail panel UI             :s2d, after s2b, 5d
+    Sprint 2 docs update               :s2e, after s2d, 1d
+    Sprint 2 done                       :milestone, s2m, 2026-04-08, 0d
 
-    section Phase 3: Pricing Intelligence
-    mobile.de API integration           :p3a, after p2m, 14d
-    AutoScout24 API integration         :p3b, after p3a, 10d
-    auto24.ee data collection           :crit, p3c, after p2m, 21d
-    Price normalization pipeline        :p3d, after p3b, 7d
-    Price range visualizations          :p3e, after p3d, 7d
-    Milestone: pricing live             :milestone, p3m, after p3e, 0d
+    section Sprint 3: Teabevarav & Enrichment
+    Research Teabevarav API             :s3a, 2026-04-08, 5d
+    Build Teabevarav API client         :s3b, after s3a, 7d
+    Integrate into vehicle panel        :s3c, after s3b, 3d
+    Statistikaamet API (TS322)          :s3d, 2026-04-08, 7d
+    Serverless proxy (CF Worker)        :s3e, after s3b, 5d
+    Sprint 3 done                       :milestone, s3m, 2026-04-22, 0d
 
-    section Phase 4: Depreciation Analysis
-    Depreciation curve computation      :p4a, after p3m, 7d
-    Depreciation charts UI              :p4b, after p4a, 7d
-    Value retention indicator           :p4c, after p4b, 5d
-    Cross-model depreciation comparison :p4d, after p4c, 5d
-    Milestone: depreciation live        :milestone, p4m, after p4d, 0d
+    section Sprint 4: auto24.ee Pricing
+    Research auto24 data access         :s4a, 2026-04-22, 5d
+    Build auto24 data collector         :s4b, after s4a, 7d
+    Price normalization pipeline        :s4c, after s4b, 5d
+    Price range visualizations          :s4d, after s4c, 5d
+    Sprint 4 done                       :milestone, s4m, 2026-05-06, 0d
 
-    section Phase 5: Polish & Scale
-    Performance optimization            :p5a, after p4m, 14d
-    Mobile responsive improvements      :p5b, after p5a, 7d
-    Architecture reassessment           :milestone, p5m, after p5b, 0d
+    section Sprint 5: International Pricing
+    mobile.de API integration           :crit, s5a, 2026-05-06, 10d
+    AutoScout24 API integration         :crit, s5b, 2026-05-06, 10d
+    Cross-platform comparison           :s5c, after s5a, 5d
+    autoportaal.ee collection           :s5d, 2026-05-06, 7d
+    Sprint 5 done                       :milestone, s5m, 2026-05-20, 0d
+
+    section Sprint 6: Depreciation
+    Depreciation curve computation      :s6a, 2026-05-20, 7d
+    Depreciation charts UI              :s6b, after s6a, 5d
+    Value retention indicator           :s6c, after s6b, 3d
+    Cross-model comparison              :s6d, after s6c, 3d
+    Sprint 6 done                       :milestone, s6m, 2026-06-03, 0d
+
+    section Sprint 7+: Polish & Scale
+    Performance optimization            :s7a, after s6m, 14d
+    Mobile responsive redesign          :s7b, after s7a, 7d
+    Architecture reassessment           :milestone, s7m, after s7b, 0d
 ```
 
 ---
@@ -220,17 +231,22 @@ gantt
 ## Dependency Map
 
 ```
-Phase 0 (DONE)
-    └── Phase 1: Expand Data Sources
-            └── Phase 2: Vehicle Lookup
-                    ├── Phase 3: Pricing Intelligence
-                    │       └── Phase 4: Depreciation Analysis
-                    │               └── Phase 5: Polish & Scale
-                    └── [ATV API credentials — critical path]
+Sprint 0–1 (DONE)
+    └── Sprint 2: API & VIN Foundation
+            └── Sprint 3: Teabevarav API & Enrichment
+                    └── Sprint 4: auto24.ee Pricing ──────┐
+                        Sprint 5: International Pricing ───┤ (can run in parallel)
+                                                           └── Sprint 6: Depreciation
+                                                                   └── Sprint 7+: Polish
 ```
 
 ## Critical Path Items
 
-1. **ATV API credentials** — Contact Transpordiamet as soon as Phase 1 starts. This gates Phase 2.
-2. **mobile.de API account** — Apply during Phase 2. This gates Phase 3.
-3. **auto24.ee data access** — Explore partnership during Phase 2. Scraping is fallback. This partially gates Phase 3.
+| Blocker | Gates | Owner Action | Deadline |
+|---------|-------|-------------|----------|
+| Teabevarav API access | Sprint 3 | Check https://abi.ria.ee/teabevarav/ for registration | This week |
+| auto24.ee data access | Sprint 4 | Email info@auto24.ee about partnership | This week |
+| mobile.de API account | Sprint 5 | Apply at services.mobile.de | Now (weeks lead time) |
+| AutoScout24 API access | Sprint 5 | Apply at developer portal | Now (weeks lead time) |
+
+**Note:** Sprints 2–3 have NO external blockers. Sprint 5 can run in parallel with Sprint 4 if API credentials arrive. Sprint 6 needs at least one pricing source (Sprint 4 or 5).
