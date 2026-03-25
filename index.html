@@ -631,6 +631,179 @@ body {
   margin-top: 4px;
 }
 
+/* ── PRICING ── */
+.price-section { margin-bottom: 16px; }
+.price-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 16px 0;
+}
+.price-card {
+  background: var(--s2);
+  border-radius: var(--radius);
+  padding: 16px;
+  border-left: 3px solid var(--green);
+}
+.price-card.range { border-left-color: var(--blue); }
+.price-card.sample { border-left-color: var(--gold); }
+.price-card-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.price-card-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+}
+.price-card-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.price-box-plot {
+  position: relative;
+  height: 48px;
+  margin: 20px 0 28px;
+  display: flex;
+  align-items: center;
+}
+.price-box-track {
+  position: absolute;
+  left: 0; right: 0;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.price-box-iqr {
+  position: absolute;
+  height: 24px;
+  background: rgba(46, 160, 67, 0.15);
+  border: 2px solid var(--green);
+  border-radius: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.price-box-median {
+  position: absolute;
+  width: 3px;
+  height: 32px;
+  background: var(--green);
+  border-radius: 2px;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+.price-box-whisker {
+  position: absolute;
+  width: 2px;
+  height: 12px;
+  background: var(--muted);
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+.price-box-label {
+  position: absolute;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  top: 100%;
+  transform: translateX(-50%);
+  margin-top: 6px;
+  white-space: nowrap;
+}
+.price-box-marker {
+  position: absolute;
+  width: 0; height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 8px solid var(--gold);
+  top: -2px;
+  transform: translateX(-50%);
+}
+.price-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+.price-check input {
+  font-family: var(--mono);
+  font-size: 14px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--s1);
+  color: var(--text);
+  width: 140px;
+}
+.price-check input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+.fair-price-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+}
+.fair-price-badge.good { background: rgba(46,160,67,0.12); color: #2ea043; }
+.fair-price-badge.fair { background: rgba(196,164,82,0.12); color: var(--gold); }
+.fair-price-badge.above { background: rgba(218,54,51,0.12); color: #da3633; }
+.price-sources-grid {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+.price-source-row {
+  display: grid;
+  grid-template-columns: 120px 1fr 80px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.price-source-row:last-child { border-bottom: none; }
+.price-source-name {
+  font-weight: 600;
+  font-size: 12px;
+}
+.price-source-bar {
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.price-source-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s;
+}
+.price-source-value {
+  font-family: var(--mono);
+  font-size: 12px;
+  text-align: right;
+}
+.price-sample-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  background: rgba(196,164,82,0.12);
+  color: var(--gold);
+  margin-left: 8px;
+}
+
 /* ── TIMELINE PRESETS ── */
 .timeline-preset {
   padding: 4px 12px !important;
@@ -1023,6 +1196,20 @@ body {
             <p class="insight-text" id="vehicleInsightText"></p>
           </div>
 
+          <!-- Pricing Intelligence -->
+          <div id="pricingSection" class="card" style="display:none;margin-bottom:16px">
+            <div class="card-title" id="pricingTitle">Market pricing <span class="price-sample-badge">SAMPLE DATA</span></div>
+            <div class="card-desc" id="pricingDesc">Current asking prices across platforms</div>
+            <div id="priceSummaryCards" class="price-cards-grid"></div>
+            <div id="priceBoxPlot" class="price-box-plot" style="display:none"></div>
+            <div id="priceCheck" class="price-check" style="display:none">
+              <span style="font-size:12px;color:var(--muted)">Check a price:</span>
+              <input type="number" id="priceCheckInput" placeholder="e.g. 22000">
+              <span id="priceCheckBadge"></span>
+            </div>
+            <div id="priceSourcesGrid" class="price-sources-grid" style="display:none"></div>
+          </div>
+
           <!-- Drill-down selector (shown when only make is known, e.g. after VIN decode) -->
           <div id="vehicleDrilldown" class="card" style="display:none;margin-bottom:16px">
             <div class="card-title" id="drilldownTitle">Select your model for detailed comparison</div>
@@ -1399,7 +1586,26 @@ async function fetchData() {
   }
 }
 
-window.addEventListener('load', fetchData);
+// ── Price data ──
+let priceData = { aggregates: [], listings: [] };
+
+async function fetchPrices() {
+  try {
+    const resp = await fetch('prices.json');
+    if (!resp.ok) return;
+    const data = await resp.json();
+    priceData.aggregates = data.aggregates || [];
+    priceData.listings = data.listings || [];
+    log(`Loaded ${priceData.aggregates.length} price aggregates, ${priceData.listings.length} listings`);
+  } catch(err) {
+    log('prices.json not available: ' + err.message);
+  }
+}
+
+window.addEventListener('load', async () => {
+  await fetchData();
+  await fetchPrices();
+});
 
 // ═══════════════════════════════════════════════
 // OVERVIEW PAGE
@@ -2605,6 +2811,237 @@ function showVehicleReport({ make, model, variant, year, vin }) {
   } else {
     crossCard.style.display = 'none';
   }
+
+  // Pricing intelligence
+  renderPricingSection(make, model, variant, year);
+}
+
+// ═══════════════════════════════════════════════
+// PRICING INTELLIGENCE
+// ═══════════════════════════════════════════════
+function findPriceAggregate(make, model, prodYear) {
+  return priceData.aggregates.find(a =>
+    a.make === make && a.model === model && a.prodYear === prodYear
+  ) || null;
+}
+
+function findPriceAggregatesForModel(make, model) {
+  return priceData.aggregates.filter(a => a.make === make && a.model === model);
+}
+
+function findListingsForModel(make, model, prodYear) {
+  return priceData.listings.filter(l =>
+    l.make === make && l.model === model && (!prodYear || l.prodYear === prodYear)
+  );
+}
+
+function classifyPrice(price, agg) {
+  if (price <= agg.p25Price) return { class: 'good', label: 'Good deal — below market' };
+  if (price <= agg.p75Price) return { class: 'fair', label: 'Fair price — within typical range' };
+  return { class: 'above', label: 'Above market — higher than typical' };
+}
+
+function formatEur(n) {
+  return n.toLocaleString('en') + ' €';
+}
+
+function renderPricingSection(make, model, variant, year) {
+  const section = document.getElementById('pricingSection');
+  const cardsEl = document.getElementById('priceSummaryCards');
+  const boxEl = document.getElementById('priceBoxPlot');
+  const checkEl = document.getElementById('priceCheck');
+  const sourcesEl = document.getElementById('priceSourcesGrid');
+
+  if (!model || priceData.aggregates.length === 0) {
+    section.style.display = 'none';
+    const pyc = document.getElementById('priceYearCard');
+    if (pyc) pyc.style.display = 'none';
+    return;
+  }
+
+  // Find best aggregate: exact year match or latest available
+  let agg = year ? findPriceAggregate(make, model, year) : null;
+  const allAggs = findPriceAggregatesForModel(make, model);
+
+  if (!agg && allAggs.length > 0) {
+    // Use most recent year with data
+    agg = allAggs.reduce((best, a) => a.prodYear > best.prodYear ? a : best);
+  }
+
+  if (!agg) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = 'block';
+
+  // Title
+  const yearLabel = year || agg.prodYear;
+  document.getElementById('pricingTitle').innerHTML = `Market pricing for ${make} ${model} (${yearLabel}) <span class="price-sample-badge">SAMPLE DATA</span>`;
+  document.getElementById('pricingDesc').textContent = `Based on ${agg.sampleSize} listings across multiple platforms`;
+
+  // Summary cards
+  cardsEl.innerHTML = `
+    <div class="price-card">
+      <div class="price-card-label">Median price</div>
+      <div class="price-card-value">${formatEur(agg.medianPrice)}</div>
+      <div class="price-card-sub">typical asking price</div>
+    </div>
+    <div class="price-card range">
+      <div class="price-card-label">Price range (P25–P75)</div>
+      <div class="price-card-value" style="font-size:18px">${formatEur(agg.p25Price)} – ${formatEur(agg.p75Price)}</div>
+      <div class="price-card-sub">where most listings fall</div>
+    </div>
+    <div class="price-card sample">
+      <div class="price-card-label">Market data</div>
+      <div class="price-card-value">${agg.sampleSize}</div>
+      <div class="price-card-sub">${agg.avgMileage > 0 ? (agg.avgMileage/1000).toFixed(0) + 'K km avg mileage' : 'listings analyzed'}</div>
+    </div>
+  `;
+
+  // Box plot visualization
+  boxEl.style.display = 'flex';
+  const range = agg.maxPrice - agg.minPrice;
+  const pct = (val) => ((val - agg.minPrice) / range * 100).toFixed(1);
+
+  boxEl.innerHTML = `
+    <div class="price-box-track"></div>
+    <div class="price-box-whisker" style="left:${pct(agg.minPrice)}%"></div>
+    <div class="price-box-iqr" style="left:${pct(agg.p25Price)}%;width:${(pct(agg.p75Price) - pct(agg.p25Price)).toFixed(1)}%"></div>
+    <div class="price-box-median" style="left:${pct(agg.medianPrice)}%"></div>
+    <div class="price-box-whisker" style="left:${pct(agg.maxPrice)}%"></div>
+    <div class="price-box-label" style="left:0%">${formatEur(agg.minPrice)}</div>
+    <div class="price-box-label" style="left:${pct(agg.p25Price)}%">P25</div>
+    <div class="price-box-label" style="left:${pct(agg.medianPrice)}%;font-weight:700;color:var(--green)">${formatEur(agg.medianPrice)}</div>
+    <div class="price-box-label" style="left:${pct(agg.p75Price)}%">P75</div>
+    <div class="price-box-label" style="left:100%">${formatEur(agg.maxPrice)}</div>
+    <div id="priceMarker" class="price-box-marker" style="display:none"></div>
+  `;
+
+  // Check price input
+  checkEl.style.display = 'flex';
+  const checkInput = document.getElementById('priceCheckInput');
+  const checkBadge = document.getElementById('priceCheckBadge');
+  checkInput.value = '';
+  checkBadge.innerHTML = '';
+
+  // Remove old listener and add new one
+  const newInput = checkInput.cloneNode(true);
+  checkInput.parentNode.replaceChild(newInput, checkInput);
+  newInput.addEventListener('input', () => {
+    const val = parseInt(newInput.value);
+    const marker = document.getElementById('priceMarker');
+    if (!val || val <= 0) {
+      checkBadge.innerHTML = '';
+      if (marker) marker.style.display = 'none';
+      return;
+    }
+    const cls = classifyPrice(val, agg);
+    checkBadge.innerHTML = `<span class="fair-price-badge ${cls.class}">${cls.label}</span>`;
+    if (marker) {
+      const pos = Math.max(0, Math.min(100, ((val - agg.minPrice) / range * 100)));
+      marker.style.display = 'block';
+      marker.style.left = pos + '%';
+    }
+  });
+
+  // Source comparison
+  const listings = findListingsForModel(make, model, year || agg.prodYear);
+  const bySource = {};
+  listings.forEach(l => {
+    if (!bySource[l.source]) bySource[l.source] = [];
+    bySource[l.source].push(l.price);
+  });
+
+  const sourceEntries = Object.entries(bySource).map(([source, prices]) => ({
+    source,
+    count: prices.length,
+    median: prices.sort((a,b)=>a-b)[Math.floor(prices.length/2)],
+    min: Math.min(...prices),
+    max: Math.max(...prices)
+  })).sort((a,b) => b.count - a.count);
+
+  if (sourceEntries.length > 0) {
+    sourcesEl.style.display = 'grid';
+    const maxMedian = Math.max(...sourceEntries.map(s => s.median));
+    const sourceColors = { 'mobile.de': '#1a73e8', 'autoscout24': '#ff6600', 'auto24.ee': '#2ea043' };
+
+    sourcesEl.innerHTML = `
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Price by source</div>
+      ${sourceEntries.map(s => `
+        <div class="price-source-row">
+          <div class="price-source-name">${s.source}</div>
+          <div class="price-source-bar">
+            <div class="price-source-bar-fill" style="width:${(s.median/maxMedian*100).toFixed(0)}%;background:${sourceColors[s.source]||'var(--gold)'}"></div>
+          </div>
+          <div class="price-source-value">${formatEur(s.median)} <span style="font-size:10px;color:var(--muted)">(${s.count})</span></div>
+        </div>
+      `).join('')}
+    `;
+  } else {
+    sourcesEl.style.display = 'none';
+  }
+
+  // Year price trend (if multiple years available)
+  if (allAggs.length > 2) {
+    renderPriceYearChart(allAggs, year || agg.prodYear);
+  }
+}
+
+function renderPriceYearChart(allAggs, highlightYear) {
+  // Find or create the price chart card
+  let chartCard = document.getElementById('priceYearCard');
+  if (!chartCard) {
+    chartCard = document.createElement('div');
+    chartCard.id = 'priceYearCard';
+    chartCard.className = 'card';
+    chartCard.style.marginBottom = '16px';
+    chartCard.innerHTML = `
+      <div class="card-title">Price by production year</div>
+      <div class="card-desc">How price changes with vehicle age</div>
+      <div class="chart-wrap h240"><canvas id="chartPriceYear"></canvas></div>
+    `;
+    // Insert after pricing section
+    const pricingSection = document.getElementById('pricingSection');
+    pricingSection.parentNode.insertBefore(chartCard, pricingSection.nextSibling);
+  }
+  chartCard.style.display = 'block';
+
+  const sorted = [...allAggs].sort((a,b) => a.prodYear - b.prodYear);
+  const labels = sorted.map(a => String(a.prodYear));
+  const medians = sorted.map(a => a.medianPrice);
+  const bgColors = sorted.map(a => a.prodYear === highlightYear ? 'rgba(46,160,67,0.8)' : 'rgba(46,160,67,0.3)');
+  const borderColors = sorted.map(a => a.prodYear === highlightYear ? '#2ea043' : 'rgba(46,160,67,0.5)');
+
+  destroyChart('chartPriceYear');
+  new Chart(document.getElementById('chartPriceYear'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Median price (€)',
+        data: medians,
+        backgroundColor: bgColors,
+        borderColor: borderColors,
+        borderWidth: 1,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'var(--mono)', size: 10 } } },
+        y: {
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          ticks: {
+            font: { family: 'var(--mono)', size: 10 },
+            callback: v => (v/1000).toFixed(0) + 'K €'
+          }
+        }
+      }
+    }
+  });
 }
 
 // ═══════════════════════════════════════════════

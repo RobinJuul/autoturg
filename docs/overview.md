@@ -47,7 +47,8 @@ What's built and live today:
 - **OpenData API Integration** — `parse.py` tries avaandmed.eesti.ee API first, falls back to URL-guessing
 - **Sync & Upload** — Manual .xlsx upload and auto-fetch from Transpordiamet on the 20th of each month
 - **26 months × 2 categories** — January 2024 through February 2026 (järelturg + new cars)
-- **Zero dependencies** — Single `index.html` file (~2100 lines), CDN-hosted Chart.js and SheetJS, GitHub Pages hosting
+- **Pricing Intelligence** — Market pricing section with median/P25/P75 box plot, "check a price" fair-deal indicator, per-source comparison, price-by-year depreciation chart (sample data, pending live API access)
+- **Zero dependencies** — Single `index.html` file (~3100 lines), CDN-hosted Chart.js and SheetJS, GitHub Pages hosting
 
 ## Vision (v3+)
 

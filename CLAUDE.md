@@ -6,13 +6,14 @@ Estonian used car market intelligence platform. Live at https://juulchristopher.
 
 ## Architecture
 
-Single-file SPA (`index.html`, ~2100 lines) with inline CSS + JS. No build step.
+Single-file SPA (`index.html`, ~3100 lines) with inline CSS + JS. No build step.
 - **Charts:** Chart.js 4.4.1 (CDN)
 - **Excel parsing:** SheetJS 0.18.5 (CDN, client-side)
 - **Data pipeline:** `parse.py` (Python, openpyxl) — tries avaandmed.eesti.ee API first, falls back to URL-guessing
+- **Price pipeline:** `fetch_prices.py` (Python) — fetches from mobile.de, AutoScout24, auto24.ee; outputs prices.json
 - **Vehicle scraper:** `scrape_vehicle.py` (Python) — mntstat.ee lookup by reg number or filters (server-side only)
 - **VIN decode:** Client-side JS in index.html, 70+ WMI codes
-- **Storage:** localStorage (`jarelturDB_v3`), data loaded from `data.json` (3 categories: jarelturg, newCars, imports)
+- **Storage:** localStorage (`jarelturDB_v3`), `data.json` (transactions), `prices.json` (pricing)
 - **Hosting:** GitHub Pages
 
 Read `docs/architecture.md` for full system design.
@@ -20,7 +21,7 @@ Read `docs/architecture.md` for full system design.
 ## Key Conventions
 
 - All frontend code lives in `index.html` (inline `<style>` and `<script>` blocks)
-- Server-side scripts: `parse.py` (data pipeline), `scrape_vehicle.py` (vehicle lookup)
+- Server-side scripts: `parse.py` (data pipeline), `fetch_prices.py` (pricing), `scrape_vehicle.py` (vehicle lookup)
 - CSS uses design tokens via CSS custom properties (`:root` vars)
 - JavaScript is vanilla — no modules, no build step, no framework
 - Make names are always UPPERCASE

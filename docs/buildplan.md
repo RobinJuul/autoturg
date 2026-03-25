@@ -35,13 +35,15 @@ gantt
     Apply for AVP access                :crit, p2h, 2026-03-26, 21d
     Milestone: API + lookup live        :milestone, p2m, 2026-03-26, 0d
 
-    section Phase 3: Pricing Intelligence
-    mobile.de API integration           :p3a, after p2m, 14d
-    AutoScout24 API integration         :p3b, after p3a, 10d
-    auto24.ee data collection           :crit, p3c, after p2m, 21d
-    Price normalization pipeline        :p3d, after p3b, 7d
-    Price range visualizations          :p3e, after p3d, 7d
-    Milestone: pricing live             :milestone, p3m, after p3e, 0d
+    section Phase 3: Pricing Intelligence ✓ (scaffold)
+    fetch_prices.py + sample data       :done, p3a, 2026-03-26, 1d
+    Price normalization pipeline        :done, p3d, 2026-03-26, 1d
+    Price range visualizations          :done, p3e, 2026-03-26, 1d
+    Weekly pricing GitHub Actions       :done, p3f, 2026-03-26, 1d
+    mobile.de API credentials           :crit, p3g, 2026-03-27, 21d
+    AutoScout24 API credentials         :crit, p3h, 2026-03-27, 21d
+    auto24.ee data strategy             :crit, p3i, 2026-03-27, 21d
+    Milestone: pricing live (sample)    :milestone, p3m, 2026-03-26, 0d
 
     section Phase 4: Depreciation Analysis
     Depreciation curve computation      :p4a, after p3m, 7d
@@ -122,33 +124,38 @@ gantt
 
 ---
 
-## Phase 3: Pricing Intelligence
+## Phase 3: Pricing Intelligence (DONE — scaffolding with sample data)
 
 **Objective:** Show current asking prices and price distributions from Estonian and European marketplaces.
 
-**Prerequisites:** Phase 2 complete. API accounts for mobile.de and AutoScout24 obtained.
+**Completed:** 2026-03-26 (Sprint 3 — infrastructure + sample data)
 
 **Tasks:**
-1. Integrate mobile.de Search API (HTTP Basic auth)
-2. Integrate AutoScout24 Listing API (OAuth)
-3. Build auto24.ee data collection (scraping or partnership — explore both)
-4. Build price normalization pipeline (currency, make/model matching across sources)
-5. Create price range visualizations (box plots or violin plots)
-6. Show current asking prices in vehicle detail panel
+1. [x] Build `fetch_prices.py` pipeline with source adapters (mobile.de, AutoScout24, auto24.ee)
+2. [x] Build price normalization pipeline (currency, make/model matching across sources)
+3. [x] Create price range visualizations (box plot, price cards, source comparison)
+4. [x] Show current asking prices in vehicle detail panel with "check a price" feature
+5. [x] Create `prices.json` with 252 aggregates and 1170 sample listings
+6. [x] Weekly pricing GitHub Actions workflow (`.github/workflows/update-prices.yml`)
+7. [ ] Obtain mobile.de API account (pending application)
+8. [ ] Obtain AutoScout24 API credentials (pending application)
+9. [ ] auto24.ee data collection strategy (scraping or partnership — pending)
 
 **Deliverables:**
-- [ ] Pricing data from 2+ sources ingested and stored in prices.json
-- [ ] Price normalization across sources (EUR, canonical make/model names)
-- [ ] Price range visualization for any make/model/year
-- [ ] Current listings shown alongside market statistics
-- [ ] Weekly pricing updates via GitHub Actions
+- [x] Pricing data from 3 sources ingested and stored in prices.json (sample data)
+- [x] Price normalization across sources (EUR, canonical make/model names)
+- [x] Price range visualization for any make/model/year (box plot + cards)
+- [x] "Check a price" feature — enter asking price, get good/fair/above-market assessment
+- [x] Price by source comparison (mobile.de, autoscout24, auto24.ee)
+- [x] Price by production year chart with depreciation curve
+- [x] Weekly pricing updates via GitHub Actions (ready to activate)
 
-**Risks:**
-- mobile.de API account approval timeline unknown
-- auto24.ee has no API — scraping may violate ToS, partnership may take time
-- Price data volume could grow quickly — monitor storage size
-
-**Definition of Done:** User can see price ranges for a model, compare asking prices across platforms, and understand where a specific price falls relative to the market.
+**Notes:**
+- All pricing UI is live with sample data (labeled "SAMPLE DATA" badge)
+- `fetch_prices.py --sample` generates realistic pricing data for 28 models × 9 years
+- Live API sources gracefully degrade when credentials not configured (return empty)
+- prices.json is ~500KB with sample data
+- index.html grew to ~3094 lines — approaching split threshold
 
 **References:** FR-007, FR-008, FR-009, FR-013, US-10, US-11, US-12
 

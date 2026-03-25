@@ -76,15 +76,16 @@ The current system is deliberately simple: a static site with a Python data pipe
 
 | Component | Technology | Purpose |
 |-----------|-----------|---------|
-| **Frontend** | `index.html` (~2100 lines, inline CSS + JS) | Single-page dashboard with 4 views (Overview, Comparison, Sync, Vehicle Lookup) |
-| **Charts** | Chart.js 4.4.1 (CDN) | Line, donut, bar, and stacked bar charts |
+| **Frontend** | `index.html` (~3100 lines, inline CSS + JS) | Single-page dashboard with 4 views (Overview, Comparison, Sync, Vehicle Lookup) |
+| **Charts** | Chart.js 4.4.1 (CDN) | Line, donut, bar, stacked bar, and box plot charts |
 | **Excel parsing** | SheetJS 0.18.5 (CDN) | Client-side .xlsx parsing for manual uploads |
 | **Data pipeline** | `parse.py` (Python 3, openpyxl) | Server-side Excel parsing for 3 categories, outputs data.json. Tries avaandmed.eesti.ee API first, falls back to URL-guessing |
+| **Price pipeline** | `fetch_prices.py` (Python 3) | Fetches pricing data from mobile.de, AutoScout24, auto24.ee. Outputs prices.json with aggregates + listings |
 | **Vehicle scraper** | `scrape_vehicle.py` (Python 3) | Server-side mntstat.ee scraper for vehicle lookup by reg number or filters |
 | **VIN decode** | Client-side JS in `index.html` | Decodes make + model year from VIN using 70+ WMI codes |
-| **Storage** | `data.json` (committed to repo) | 26 months × 2 categories (järelturg + newCars) transaction data |
+| **Storage** | `data.json` + `prices.json` (committed to repo) | Transaction data (~2MB) + pricing data (~500KB) |
 | **Client storage** | localStorage (`jarelturDB_v3`) | Cached data for offline use |
-| **CI/CD** | GitHub Actions | Monthly cron on 20th runs parse.py and commits data.json |
+| **CI/CD** | GitHub Actions | Monthly cron (20th) for transactions, weekly cron (Monday) for pricing |
 | **Hosting** | GitHub Pages | Static file serving |
 
 ### Data Flow (current)

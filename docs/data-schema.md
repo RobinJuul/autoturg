@@ -184,7 +184,7 @@ Full vehicle registry data from Transpordiamet ATV API (pending formal applicati
 
 ---
 
-## 4. Planned: Pricing Data
+## 4. Pricing Data (LIVE — sample data)
 
 ### ListingPrice
 
@@ -242,6 +242,20 @@ Computed summary for a make/model/variant/year combination.
   "lastUpdated": "2026-03-20"
 }
 ```
+
+---
+
+### prices.json — Top Level
+
+```json
+{
+  "lastUpdated": "2026-03-26",
+  "aggregates": [ PriceAggregate, ... ],
+  "listings": [ ListingPrice, ... ]
+}
+```
+
+Currently contains 252 aggregates and 1170 listings (sample data for 28 models × 9 production years).
 
 ---
 
@@ -318,8 +332,8 @@ All prices are stored in EUR. Listings in other currencies are converted at inge
 
 | Stage | Format | Size Estimate | When |
 |-------|--------|---------------|------|
-| **Current** | Single `data.json` with 3 categories | ~2MB (26 months × 2 categories) | Now (Phase 2 complete) |
-| **Phase 3** | `data.json` + `prices.json` | ~5-10MB total | After adding pricing data |
+| **Current** | `data.json` + `prices.json` | ~2.5MB (transactions + sample pricing) | Now (Phase 3 scaffold complete) |
+| **Phase 3+** | Same files with live pricing data | ~5-10MB total | After obtaining API credentials |
 | **Phase 4+** | SQLite or cloud DB | Unlimited | When static JSON becomes unwieldy |
 
 ### Migration Path
