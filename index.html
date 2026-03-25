@@ -533,6 +533,32 @@ body {
   margin-top: 6px;
 }
 
+/* ── VEHICLE LOOKUP ── */
+.vlookup-tab { background:var(--s3); color:var(--muted2); border:1px solid var(--border); }
+.vlookup-tab.active { background:var(--gold); color:#fff; border-color:var(--gold); }
+.vehicle-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+.vehicle-info-item {
+  padding: 10px;
+  background: var(--s3);
+  border-radius: 6px;
+}
+.vehicle-info-label {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 3px;
+}
+.vehicle-info-value {
+  font-size: 14px;
+  font-weight: 600;
+}
+
 /* ── DATA TABLE ── */
 .data-table {
   width: 100%;
@@ -668,6 +694,9 @@ body {
       </button>
       <button class="nav-btn view-btn" onclick="showPage('comparison')">
         <span class="nav-icon">⚖️</span> Model Comparison
+      </button>
+      <button class="nav-btn view-btn" onclick="showPage('vehicle')">
+        <span class="nav-icon">🔍</span> Vehicle Lookup
       </button>
     </div>
 
@@ -842,6 +871,96 @@ body {
         </div>
       </div>
 
+      <!-- ══════════ PAGE: VEHICLE LOOKUP ══════════ -->
+      <div class="page" id="page-vehicle">
+
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-title" style="margin-bottom:12px">Vehicle Lookup</div>
+          <div class="card-desc" style="margin-bottom:16px">DECODE A VIN, ENTER A REG NUMBER, OR SELECT MAKE/MODEL</div>
+
+          <!-- Tab bar -->
+          <div style="display:flex;gap:4px;margin-bottom:16px">
+            <button class="btn vlookup-tab active" data-tab="vin" onclick="switchVehicleTab('vin')">VIN Code</button>
+            <button class="btn vlookup-tab" data-tab="reg" onclick="switchVehicleTab('reg')">Reg Number</button>
+            <button class="btn vlookup-tab" data-tab="selector" onclick="switchVehicleTab('selector')">Make / Model</button>
+          </div>
+
+          <!-- VIN tab -->
+          <div class="vlookup-panel" id="vtab-vin">
+            <div style="display:flex;gap:8px;align-items:flex-end">
+              <div style="flex:1">
+                <div class="combobox-label">VIN (17 characters)</div>
+                <input type="text" id="vinInput" class="combobox-input" placeholder="e.g. WBAPH5C55BA123456" maxlength="17" style="text-transform:uppercase;letter-spacing:0.1em;font-size:13px;padding:8px 10px">
+              </div>
+              <button class="btn" onclick="lookupVIN()" style="padding:8px 16px">Decode</button>
+            </div>
+            <div id="vinError" style="color:var(--red);font-size:11px;font-family:var(--mono);margin-top:6px;display:none"></div>
+          </div>
+
+          <!-- Reg number tab -->
+          <div class="vlookup-panel" id="vtab-reg" style="display:none">
+            <div style="display:flex;gap:8px;align-items:flex-end">
+              <div style="flex:1">
+                <div class="combobox-label">Estonian Registration Number</div>
+                <input type="text" id="regInput" class="combobox-input" placeholder="e.g. 123ABC" style="text-transform:uppercase;letter-spacing:0.1em;font-size:13px;padding:8px 10px" disabled>
+              </div>
+              <button class="btn" disabled style="padding:8px 16px;opacity:0.5">Lookup</button>
+            </div>
+            <div style="margin-top:12px;padding:12px;background:var(--s3);border-radius:var(--radius);border:1px dashed var(--border2)">
+              <div style="font-family:var(--mono);font-size:11px;color:var(--muted2)">
+                🔒 Coming soon — pending data access from Transpordiamet vehicle registry.
+              </div>
+            </div>
+          </div>
+
+          <!-- Make/Model selector tab -->
+          <div class="vlookup-panel" id="vtab-selector" style="display:none">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+              <div>
+                <div class="combobox-label">MAKER</div>
+                <div id="vselMake"></div>
+              </div>
+              <div>
+                <div class="combobox-label">MODEL</div>
+                <div id="vselModel"></div>
+              </div>
+              <div>
+                <div class="combobox-label">CONFIGURATION</div>
+                <div id="vselVariant"></div>
+              </div>
+            </div>
+            <button class="btn" onclick="lookupBySelector()" style="margin-top:12px;padding:8px 16px">Show Market Data</button>
+          </div>
+        </div>
+
+        <!-- Vehicle info card -->
+        <div id="vehicleInfoCard" class="card" style="margin-bottom:16px;display:none">
+          <div class="card-title">Vehicle Info</div>
+          <div id="vehicleInfoContent" style="margin-top:12px"></div>
+        </div>
+
+        <!-- Market context -->
+        <div id="vehicleMarketContext" style="display:none">
+          <div class="stats-grid" id="vehicleStats"></div>
+          <div class="charts-grid">
+            <div class="card full">
+              <div class="card-title">Monthly Transaction Volume</div>
+              <div class="card-desc" id="vehicleChartDesc">TRANSACTIONS PER MONTH</div>
+              <div class="chart-wrap h300">
+                <canvas id="chartVehicleTrend"></canvas>
+              </div>
+            </div>
+            <div class="card full">
+              <div class="card-title">Transactions by Production Year</div>
+              <div class="card-desc">DISTRIBUTION ACROSS PRODUCTION YEARS</div>
+              <div class="chart-wrap h300">
+                <canvas id="chartVehicleYear"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ══════════ PAGE: DATA STATUS ══════════ -->
       <div class="page" id="page-sync">
 
@@ -1002,6 +1121,7 @@ function pageTitlesForCategory() {
   return {
     overview: ['Monthly Overview', `Top 5 makes · ${cat} transactions`],
     comparison: ['Model Comparison', `Up to 5 models · ${cat} · transactions & production year`],
+    vehicle: ['Vehicle Lookup', `Decode VIN · lookup by make/model · ${cat} market data`],
     sync: ['Data Status', `Auto-updated data from Transpordiamet`],
   };
 }
@@ -1039,8 +1159,13 @@ function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(`page-${id}`).classList.add('active');
+  const viewLabels = { overview:'overview', comparison:'comparison', vehicle:'vehicle', sync:'sync' };
   document.querySelectorAll('.view-btn').forEach(b => {
-    if (b.textContent.toLowerCase().includes(id === 'sync' ? 'sync' : id === 'comparison' ? 'comparison' : 'overview'))
+    const txt = b.textContent.toLowerCase();
+    if ((id==='overview' && txt.includes('overview')) ||
+        (id==='comparison' && txt.includes('comparison')) ||
+        (id==='vehicle' && txt.includes('vehicle')) ||
+        (id==='sync' && txt.includes('sync')))
       b.classList.add('active');
   });
   const titles = pageTitlesForCategory();
@@ -1049,6 +1174,7 @@ function showPage(id) {
   document.getElementById('pageSub').textContent = s;
   if (id === 'overview') renderOverview();
   if (id === 'comparison') renderComparisonPage();
+  if (id === 'vehicle') buildVehicleSelectorCombos();
 }
 
 // ═══════════════════════════════════════════════
@@ -1634,6 +1760,307 @@ function chartOpts({ yLabel='', showLegend=false, barMode=false }) {
 
 function destroyChart(id) {
   if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+// ═══════════════════════════════════════════════
+// VIN DECODE
+// ═══════════════════════════════════════════════
+const WMI_MAP = {
+  // German makes
+  'WBA':'BMW','WBS':'BMW','WBY':'BMW','5UX':'BMW','WBW':'BMW',
+  'WDD':'MERCEDES-BENZ','WDC':'MERCEDES-BENZ','WDF':'MERCEDES-BENZ','W1K':'MERCEDES-BENZ','W1V':'MERCEDES-BENZ','W1N':'MERCEDES-BENZ',
+  'WVW':'VOLKSWAGEN','WV2':'VOLKSWAGEN','WV1':'VOLKSWAGEN','3VW':'VOLKSWAGEN',
+  'WAU':'AUDI','WUA':'AUDI','93U':'AUDI',
+  'WF0':'FORD','WF1':'FORD',
+  'W0L':'OPEL','W0V':'OPEL',
+  'WDB':'MERCEDES-BENZ',
+  'WP0':'PORSCHE','WP1':'PORSCHE',
+  // Czech
+  'TMB':'SKODA','TMP':'SKODA',
+  // Swedish
+  'YV1':'VOLVO','YV4':'VOLVO','YV2':'VOLVO',
+  // Japanese
+  'SB1':'TOYOTA','JTD':'TOYOTA','JTE':'TOYOTA','JTN':'TOYOTA','5TD':'TOYOTA','4T1':'TOYOTA','2T1':'TOYOTA',
+  'JHM':'HONDA','SHH':'HONDA','1HG':'HONDA','2HG':'HONDA',
+  'JN1':'NISSAN','5N1':'NISSAN','1N4':'NISSAN','3N1':'NISSAN',
+  'JMZ':'MAZDA','3MZ':'MAZDA','1YV':'MAZDA',
+  'JF1':'SUBARU','JF2':'SUBARU','4S3':'SUBARU','4S4':'SUBARU',
+  'JS1':'SUZUKI','JS2':'SUZUKI','TSM':'SUZUKI',
+  'JMB':'MITSUBISHI','JA3':'MITSUBISHI','JA4':'MITSUBISHI',
+  // Korean
+  'KNA':'KIA','KND':'KIA','KNH':'KIA','5XX':'KIA',
+  'KMH':'HYUNDAI','KM8':'HYUNDAI','5NP':'HYUNDAI','5NM':'HYUNDAI','TMA':'HYUNDAI',
+  // French
+  'VF1':'RENAULT','VF3':'PEUGEOT','VF7':'CITROEN',
+  'VR1':'DACIA','UU1':'DACIA','UU6':'DACIA',
+  // Italian
+  'ZFA':'FIAT','ZAR':'ALFA ROMEO','ZFF':'FERRARI','ZHW':'LAMBORGHINI',
+  // British
+  'SAJ':'JAGUAR','SAL':'LAND ROVER','SAR':'LAND ROVER',
+  'WME':'SMART',
+  // American
+  '1G1':'CHEVROLET','1G6':'CADILLAC','1GC':'CHEVROLET',
+  '1FA':'FORD','1FM':'FORD','1FT':'FORD','2FA':'FORD','3FA':'FORD',
+  '1C4':'CHRYSLER','1C6':'DODGE','2C3':'CHRYSLER',
+  '5YJ':'TESLA','7SA':'TESLA',
+  // Romanian
+  'UU1':'DACIA',
+  // Chinese
+  'LFV':'VOLKSWAGEN','LBE':'GEELY','LVS':'VOLVO',
+};
+
+// Model year code: position 10
+const YEAR_CODES = {
+  'A':2010,'B':2011,'C':2012,'D':2013,'E':2014,'F':2015,'G':2016,'H':2017,
+  'J':2018,'K':2019,'L':2020,'M':2021,'N':2022,'P':2023,'R':2024,'S':2025,'T':2026,
+  'V':2027,'W':2028,'X':2029,'Y':2030,
+  '1':2001,'2':2002,'3':2003,'4':2004,'5':2005,'6':2006,'7':2007,'8':2008,'9':2009,
+};
+
+function decodeVIN(vin) {
+  vin = (vin || '').toUpperCase().replace(/\s/g, '');
+
+  if (vin.length !== 17) return { isValid: false, error: 'VIN must be exactly 17 characters' };
+  if (/[IOQ]/.test(vin)) return { isValid: false, error: 'VIN cannot contain I, O, or Q' };
+  if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) return { isValid: false, error: 'VIN contains invalid characters' };
+
+  const wmi = vin.substring(0, 3);
+  const vds = vin.substring(3, 9);
+  const yearCode = vin.charAt(9);
+
+  // Try 3-char WMI first, then 2-char prefix
+  let make = WMI_MAP[wmi] || WMI_MAP[wmi.substring(0, 2)] || null;
+  const modelYear = YEAR_CODES[yearCode] || null;
+
+  return {
+    isValid: true,
+    vin,
+    wmi,
+    vds,
+    make,
+    modelYear,
+    yearCode,
+    plant: vin.charAt(10),
+    serial: vin.substring(11),
+  };
+}
+
+// ═══════════════════════════════════════════════
+// VEHICLE LOOKUP PAGE
+// ═══════════════════════════════════════════════
+let vehicleSelection = { make: '', model: '', variant: '' };
+
+function switchVehicleTab(tab) {
+  document.querySelectorAll('.vlookup-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.vlookup-panel').forEach(p => p.style.display = 'none');
+  document.getElementById(`vtab-${tab}`).style.display = 'block';
+  if (tab === 'selector') buildVehicleSelectorCombos();
+}
+
+function buildVehicleSelectorCombos() {
+  const makeOpts = allMakes();
+  const mkContainer = document.getElementById('vselMake');
+  mkContainer.innerHTML = '';
+  mkContainer.appendChild(createCombobox({
+    placeholder: '-- Select maker --',
+    options: makeOpts,
+    selectedValue: vehicleSelection.make,
+    onSelect: (val) => { vehicleSelection = { make: val, model: '', variant: '' }; buildVehicleSelectorCombos(); }
+  }));
+
+  const mdContainer = document.getElementById('vselModel');
+  mdContainer.innerHTML = '';
+  const modelOpts = vehicleSelection.make ? modelsForMake(vehicleSelection.make) : [];
+  mdContainer.appendChild(createCombobox({
+    placeholder: vehicleSelection.make ? '-- Select model --' : '-- Select maker first --',
+    options: modelOpts,
+    selectedValue: vehicleSelection.model,
+    disabled: !vehicleSelection.make,
+    onSelect: (val) => { vehicleSelection.model = val; vehicleSelection.variant = ''; buildVehicleSelectorCombos(); }
+  }));
+
+  const vContainer = document.getElementById('vselVariant');
+  vContainer.innerHTML = '';
+  const varOpts = (vehicleSelection.make && vehicleSelection.model) ? variantsForMakeModel(vehicleSelection.make, vehicleSelection.model) : [];
+  vContainer.appendChild(createCombobox({
+    placeholder: (vehicleSelection.make && vehicleSelection.model) ? '-- All configurations --' : '-- Select model first --',
+    options: varOpts,
+    selectedValue: vehicleSelection.variant,
+    disabled: !(vehicleSelection.make && vehicleSelection.model),
+    allLabel: 'All configurations',
+    onSelect: (val) => { vehicleSelection.variant = val; }
+  }));
+}
+
+function lookupVIN() {
+  const input = document.getElementById('vinInput').value;
+  const errEl = document.getElementById('vinError');
+  const result = decodeVIN(input);
+
+  if (!result.isValid) {
+    errEl.textContent = result.error;
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+
+  showVehicleInfo({
+    make: result.make || 'Unknown',
+    modelYear: result.modelYear,
+    vin: result.vin,
+    wmi: result.wmi,
+  });
+
+  if (result.make) {
+    showVehicleMarketData(result.make, null, null);
+  }
+}
+
+function lookupBySelector() {
+  if (!vehicleSelection.make) return;
+  showVehicleInfo({
+    make: vehicleSelection.make,
+    model: vehicleSelection.model || null,
+    variant: vehicleSelection.variant || null,
+  });
+  showVehicleMarketData(vehicleSelection.make, vehicleSelection.model, vehicleSelection.variant);
+}
+
+function showVehicleInfo(info) {
+  const card = document.getElementById('vehicleInfoCard');
+  const content = document.getElementById('vehicleInfoContent');
+  card.style.display = 'block';
+
+  const items = [];
+  if (info.make) items.push(['Make', info.make]);
+  if (info.model) items.push(['Model', info.model]);
+  if (info.variant) items.push(['Configuration', info.variant]);
+  if (info.modelYear) items.push(['Model Year', info.modelYear]);
+  if (info.vin) items.push(['VIN', info.vin]);
+  if (info.wmi) items.push(['WMI', info.wmi]);
+
+  content.innerHTML = `<div class="vehicle-info-grid">${items.map(([label, value]) =>
+    `<div class="vehicle-info-item">
+      <div class="vehicle-info-label">${label}</div>
+      <div class="vehicle-info-value">${value}</div>
+    </div>`
+  ).join('')}</div>`;
+}
+
+function showVehicleMarketData(make, model, variant) {
+  const ctx = document.getElementById('vehicleMarketContext');
+  ctx.style.display = 'block';
+
+  const months = filteredMonths();
+  const labels = months.map(m => m.label);
+
+  // Filter rows
+  function getVehicleRows() {
+    return months.flatMap(m =>
+      m.rows.filter(r =>
+        r.make === make &&
+        (!model || r.model === model) &&
+        (!variant || r.variant === variant)
+      ).map(r => ({...r, monthLabel: m.label}))
+    );
+  }
+
+  const rows = getVehicleRows();
+  const totalTx = rows.reduce((s,r)=>s+r.count,0);
+
+  // Market share
+  const allTotal = months.flatMap(m=>m.rows).reduce((s,r)=>s+r.count,0);
+  const share = allTotal > 0 ? (totalTx*100/allTotal).toFixed(1) : '0';
+
+  // Rank
+  const makeMap = {};
+  months.flatMap(m=>m.rows).forEach(r=>{ makeMap[r.make]=(makeMap[r.make]||0)+r.count; });
+  const sorted = Object.entries(makeMap).sort((a,b)=>b[1]-a[1]);
+  const rank = sorted.findIndex(([m])=>m===make) + 1;
+
+  // Avg per month
+  const avgPerMo = months.length ? Math.round(totalTx / months.length) : 0;
+
+  // Label
+  let label = make;
+  if (model) label += ' ' + model;
+  if (variant) label += ' ' + variant;
+
+  document.getElementById('vehicleChartDesc').textContent = `${label} · ${CATEGORY_LABELS[activeCategory].toUpperCase()}`;
+
+  // Stats
+  document.getElementById('vehicleStats').innerHTML = `
+    <div class="stat-pill"><div class="stat-pill-accent"></div>
+      <div class="stat-pill-label">Total Transactions</div>
+      <div class="stat-pill-value">${totalTx.toLocaleString()}</div>
+      <div class="stat-pill-sub">${months.length} months · ${label}</div>
+    </div>
+    <div class="stat-pill"><div class="stat-pill-accent"></div>
+      <div class="stat-pill-label">Market Share</div>
+      <div class="stat-pill-value">${share}%</div>
+      <div class="stat-pill-sub">of total ${CATEGORY_LABELS[activeCategory]} transactions</div>
+    </div>
+    <div class="stat-pill"><div class="stat-pill-accent"></div>
+      <div class="stat-pill-label">Popularity Rank</div>
+      <div class="stat-pill-value">#${rank || '—'}</div>
+      <div class="stat-pill-sub">among ${sorted.length} makes</div>
+    </div>
+    <div class="stat-pill"><div class="stat-pill-accent"></div>
+      <div class="stat-pill-label">Avg / Month</div>
+      <div class="stat-pill-value">${avgPerMo.toLocaleString()}</div>
+      <div class="stat-pill-sub">transactions monthly avg</div>
+    </div>`;
+
+  // Trend chart
+  destroyChart('chartVehicleTrend');
+  const color = colorFor(make, 0);
+  charts['chartVehicleTrend'] = new Chart(
+    document.getElementById('chartVehicleTrend').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label,
+          data: months.map(m =>
+            m.rows.filter(r=>r.make===make&&(!model||r.model===model)&&(!variant||r.variant===variant))
+                  .reduce((s,r)=>s+r.count,0)
+          ),
+          borderColor: color,
+          backgroundColor: color+'18',
+          fill: true,
+          tension: 0.35,
+          pointBackgroundColor: color,
+          pointRadius: 4,
+          borderWidth: 2,
+        }]
+      },
+      options: chartOpts({ yLabel:'Transactions', showLegend:false })
+    }
+  );
+
+  // Production year chart
+  const yearMap = {};
+  rows.forEach(r => { if(r.prodYear) yearMap[r.prodYear]=(yearMap[r.prodYear]||0)+r.count; });
+  const years = Object.keys(yearMap).sort();
+
+  destroyChart('chartVehicleYear');
+  charts['chartVehicleYear'] = new Chart(
+    document.getElementById('chartVehicleYear').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: years,
+        datasets: [{
+          label,
+          data: years.map(y=>yearMap[y]||0),
+          backgroundColor: color+'99',
+          borderColor: color,
+          borderWidth: 1,
+          borderRadius: 3,
+        }]
+      },
+      options: chartOpts({ yLabel:'Transactions', showLegend:false })
+    }
+  );
 }
 
 // ═══════════════════════════════════════════════
