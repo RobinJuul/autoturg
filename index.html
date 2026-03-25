@@ -1023,7 +1023,16 @@ body {
             <p class="insight-text" id="vehicleInsightText"></p>
           </div>
 
-          <!-- Configuration comparison -->
+          <!-- Model comparison within make -->
+          <div id="modelComparison" class="card" style="display:none;margin-bottom:16px">
+            <div class="card-title" id="modelCompTitle">Model popularity</div>
+            <div class="card-desc" id="modelCompDesc">How does this model compare to other models?</div>
+            <div class="chart-wrap h300">
+              <canvas id="chartModelPopularity"></canvas>
+            </div>
+          </div>
+
+          <!-- Configuration comparison within model -->
           <div id="configComparison" class="card" style="display:none;margin-bottom:16px">
             <div class="card-title">Configuration popularity</div>
             <div class="card-desc" id="configCompDesc">How does your chosen configuration compare?</div>
@@ -2128,7 +2137,7 @@ function rankAllModels(months) {
 }
 
 function rankModelsForMake(months, make) {
-  return rankAllModels(months).filter(m => m.make === make);
+  return rankAllModels(months).filter(m => m.make === make && m.model);
 }
 
 function rankConfigsForModel(months, make, model) {
@@ -2188,31 +2197,67 @@ function showVehicleReport({ make, model, variant, year, vin }) {
   const share = allTotal > 0 ? (totalTx*100/allTotal).toFixed(1) : '0';
   const avgPerMo = months.length ? Math.round(totalTx / months.length) : 0;
 
-  // Stats — show model-level stats when available
+  // Config rank within model (if variant selected)
+  let configRankWithinModel = 0, configsForModel = [];
+  if (model && variant) {
+    configsForModel = rankConfigsForModel(months, make, model);
+    configRankWithinModel = configsForModel.findIndex(c => c.variant === variant) + 1;
+  }
+
+  // Make-level totals for share-within-make calc
+  const makeTotalTx = months.flatMap(m=>m.rows).filter(r=>r.make===make).reduce((s,r)=>s+r.count,0);
+  const shareWithinMake = makeTotalTx > 0 ? (totalTx*100/makeTotalTx).toFixed(1) : '0';
+
+  // Stats — focus on within-make and within-model comparisons
   const statsEl = document.getElementById('vehicleStats');
-  if (model) {
+  if (model && variant) {
+    // Full drill-down: make → model → config
     statsEl.innerHTML = `
-      <div class="stat-pill"><div class="stat-pill-accent"></div>
-        <div class="stat-pill-label">Make popularity</div>
-        <div class="stat-pill-value">#${makeRank || '—'}</div>
-        <div class="stat-pill-sub">of ${sortedMakes.length} makes</div>
-      </div>
-      <div class="stat-pill"><div class="stat-pill-accent"></div>
-        <div class="stat-pill-label">Model rank (market)</div>
-        <div class="stat-pill-value">#${modelRankOverall || '—'}</div>
-        <div class="stat-pill-sub">of ${allModelRanks.length} models traded</div>
-      </div>
       <div class="stat-pill"><div class="stat-pill-accent"></div>
         <div class="stat-pill-label">Model rank (${make})</div>
         <div class="stat-pill-value">#${modelRankWithinMake || '—'}</div>
         <div class="stat-pill-sub">of ${makeModelRanks.length} ${make} models</div>
       </div>
       <div class="stat-pill"><div class="stat-pill-accent"></div>
+        <div class="stat-pill-label">Config rank (${model})</div>
+        <div class="stat-pill-value">#${configRankWithinModel || '—'}</div>
+        <div class="stat-pill-sub">of ${configsForModel.length} ${model} configs</div>
+      </div>
+      <div class="stat-pill"><div class="stat-pill-accent"></div>
         <div class="stat-pill-label">Transactions</div>
         <div class="stat-pill-value">${totalTx.toLocaleString()}</div>
         <div class="stat-pill-sub">${avgPerMo}/month avg</div>
+      </div>
+      <div class="stat-pill"><div class="stat-pill-accent"></div>
+        <div class="stat-pill-label">Share of ${make}</div>
+        <div class="stat-pill-value">${shareWithinMake}%</div>
+        <div class="stat-pill-sub">of ${makeTotalTx.toLocaleString()} ${make} txs</div>
+      </div>`;
+  } else if (model) {
+    // Model level: compare within make
+    statsEl.innerHTML = `
+      <div class="stat-pill"><div class="stat-pill-accent"></div>
+        <div class="stat-pill-label">Model rank (${make})</div>
+        <div class="stat-pill-value">#${modelRankWithinMake || '—'}</div>
+        <div class="stat-pill-sub">of ${makeModelRanks.length} ${make} models</div>
+      </div>
+      <div class="stat-pill"><div class="stat-pill-accent"></div>
+        <div class="stat-pill-label">Share of ${make}</div>
+        <div class="stat-pill-value">${shareWithinMake}%</div>
+        <div class="stat-pill-sub">of ${makeTotalTx.toLocaleString()} ${make} txs</div>
+      </div>
+      <div class="stat-pill"><div class="stat-pill-accent"></div>
+        <div class="stat-pill-label">Transactions</div>
+        <div class="stat-pill-value">${totalTx.toLocaleString()}</div>
+        <div class="stat-pill-sub">${avgPerMo}/month avg</div>
+      </div>
+      <div class="stat-pill"><div class="stat-pill-accent"></div>
+        <div class="stat-pill-label">Configurations</div>
+        <div class="stat-pill-value">${rankConfigsForModel(months, make, model).length}</div>
+        <div class="stat-pill-sub">variants available</div>
       </div>`;
   } else {
+    // Make level only
     statsEl.innerHTML = `
       <div class="stat-pill"><div class="stat-pill-accent"></div>
         <div class="stat-pill-label">Total Transactions</div>
@@ -2225,14 +2270,14 @@ function showVehicleReport({ make, model, variant, year, vin }) {
         <div class="stat-pill-sub">of total ${CATEGORY_LABELS[activeCategory]} transactions</div>
       </div>
       <div class="stat-pill"><div class="stat-pill-accent"></div>
-        <div class="stat-pill-label">Popularity Rank</div>
+        <div class="stat-pill-label">Market Rank</div>
         <div class="stat-pill-value">#${makeRank || '—'}</div>
         <div class="stat-pill-sub">among ${sortedMakes.length} makes</div>
       </div>
       <div class="stat-pill"><div class="stat-pill-accent"></div>
-        <div class="stat-pill-label">Avg / Month</div>
-        <div class="stat-pill-value">${avgPerMo.toLocaleString()}</div>
-        <div class="stat-pill-sub">transactions monthly avg</div>
+        <div class="stat-pill-label">Models</div>
+        <div class="stat-pill-value">${makeModelRanks.length}</div>
+        <div class="stat-pill-sub">unique models traded</div>
       </div>`;
   }
 
@@ -2246,14 +2291,63 @@ function showVehicleReport({ make, model, variant, year, vin }) {
     'niche': 'Limited availability — finding the right one may take time.'
   };
 
-  if (model && modelRankOverall) {
-    insightTextEl.innerHTML = `<strong>${label}</strong> is the #${modelRankWithinMake} most popular ${make} model and ranks #${modelRankOverall} overall in the Estonian ${CATEGORY_LABELS[activeCategory].toLowerCase()} market. With ${totalTx.toLocaleString()} transactions in ${months.length} months, it's a <strong>${liquidity.replace('-', ' ')}</strong> choice — ${liquidityText[liquidity]}`;
+  if (model && variant && configRankWithinModel) {
+    insightTextEl.innerHTML = `<strong>${label}</strong> is the #${configRankWithinModel} most popular ${make} ${model} configuration, accounting for ${shareWithinMake}% of all ${make} transactions. With ${totalTx.toLocaleString()} transactions in ${months.length} months, it's a <strong>${liquidity.replace('-', ' ')}</strong> choice — ${liquidityText[liquidity]}`;
+    insightEl.style.display = 'block';
+  } else if (model && modelRankWithinMake) {
+    const topModel = makeModelRanks[0];
+    const topModelText = topModel && topModel.model !== model ? ` The most popular ${make} model is ${topModel.model} with ${topModel.count.toLocaleString()} transactions.` : '';
+    insightTextEl.innerHTML = `<strong>${make} ${model}</strong> is the #${modelRankWithinMake} most popular model within ${make}, accounting for ${shareWithinMake}% of all ${make} transactions. With ${totalTx.toLocaleString()} transactions in ${months.length} months, it's a <strong>${liquidity.replace('-', ' ')}</strong> choice — ${liquidityText[liquidity]}${topModelText}`;
     insightEl.style.display = 'block';
   } else if (makeRank) {
-    insightTextEl.innerHTML = `<strong>${make}</strong> ranks #${makeRank} in the Estonian ${CATEGORY_LABELS[activeCategory].toLowerCase()} market with ${totalTx.toLocaleString()} transactions (${share}% market share). ${liquidityText[liquidity]}`;
+    insightTextEl.innerHTML = `<strong>${make}</strong> ranks #${makeRank} in the Estonian ${CATEGORY_LABELS[activeCategory].toLowerCase()} market with ${totalTx.toLocaleString()} transactions (${share}% market share). ${make} has ${makeModelRanks.length} unique models traded. ${liquidityText[liquidity]}`;
     insightEl.style.display = 'block';
   } else {
     insightEl.style.display = 'none';
+  }
+
+  // Model comparison chart (within make) — always show when model is selected
+  const modelCompEl = document.getElementById('modelComparison');
+  if (model && makeModelRanks.length > 1) {
+    modelCompEl.style.display = 'block';
+    document.getElementById('modelCompTitle').textContent = `${make} model popularity`;
+    document.getElementById('modelCompDesc').textContent = `Top ${Math.min(15, makeModelRanks.length)} of ${makeModelRanks.length} ${make} models by transaction volume`;
+    const topModels = makeModelRanks.filter(m => m.model).slice(0, 15); // exclude empty model, show top 15
+    const chartColor = colorFor(make, 0);
+
+    destroyChart('chartModelPopularity');
+    charts['chartModelPopularity'] = new Chart(
+      document.getElementById('chartModelPopularity').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: topModels.map(m => m.model),
+          datasets: [{
+            data: topModels.map(m => m.count),
+            backgroundColor: topModels.map(m => m.model === model ? chartColor : chartColor + '30'),
+            borderColor: topModels.map(m => m.model === model ? chartColor : chartColor + '60'),
+            borderWidth: 1,
+            borderRadius: 3,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x?.toLocaleString()} transactions` } }
+          },
+          scales: {
+            x: { grid: { color: gridColor }, ticks: { color: tickColor, font: tickFont, callback: v => v.toLocaleString() },
+                 title: { display: true, text: 'Transactions', color: tickColor, font: tickFont } },
+            y: { grid: { display: false }, ticks: { color: tickColor, font: { ...tickFont, size: 11 },
+                 callback: function(value) { const lbl = this.getLabelForValue(value); return lbl === model ? '→ ' + lbl : lbl; } } }
+          }
+        }
+      }
+    );
+  } else {
+    modelCompEl.style.display = 'none';
   }
 
   // Configuration comparison chart
